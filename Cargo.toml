@@ -1,0 +1,17 @@
+[package]
+name = "numpy_maxminddb"
+version = "0.1.0"
+authors = ["Andrew Korzhuev <korzhuev@andrusha.me>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "numpy_maxminddb"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.17", features = ["extension-module"] }
+numpy = "0.17"
+maxminddb = "0.23.0"
+

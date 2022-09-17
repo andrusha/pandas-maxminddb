@@ -1,0 +1,16 @@
+[build-system]
+requires = ["maturin>=0.13,<0.14"]
+build-backend = "maturin"
+
+[project]
+name = "numpy_maxminddb"
+description = "numpy maxminddb python bindings"
+requires-python = ">=3.9"
+license = {text = "Apache-2.0"}
+dependencies = [
+    "pandas",
+    "numpy"
+]
+
+[tool.maturin]
+python-source = "python"
