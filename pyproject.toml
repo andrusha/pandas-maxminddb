@@ -22,8 +22,5 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
 ]
 
-[tool.maturin]
-python-source = "python"
-
 [tool.pytest.ini_options]
 addopts = "--benchmark-disable"
