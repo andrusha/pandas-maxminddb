@@ -15,3 +15,8 @@ pyo3 = { version = "0.17", features = ["extension-module"] }
 numpy = "0.17"
 maxminddb = "0.23.0"
 
+[features]
+abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
+generate-import-lib = ["pyo3/generate-import-lib"]
+
+[workspace]

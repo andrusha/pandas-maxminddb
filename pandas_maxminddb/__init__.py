@@ -1,7 +1,8 @@
 import pandas as pd
-from .pandas_maxminddb import mmdb_geolocate
+from .pandas_maxminddb import *
+from .pandas_maxminddb import __all__, __doc__
 
-__all__ = [
+__all__ = __all__ + [
     "GeoAccessor"
 ]
 

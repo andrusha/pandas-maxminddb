@@ -1,3 +1,8 @@
 /target
 .venv
 *.mmdb
+!.tool-versions
+.nox
+.benchmarks
+.pytest_cache
+__pycache__
