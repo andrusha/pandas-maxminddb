@@ -3,7 +3,8 @@ requires = ["maturin>=0.13,<0.14"]
 build-backend = "maturin"
 
 [project]
-name = "numpy_maxminddb"
+name = "pandas-maxminddb"
+version = "0.1.0"
 description = "numpy maxminddb python bindings"
 requires-python = ">=3.9"
 license = {text = "Apache-2.0"}

@@ -6,10 +6,10 @@ use pyo3::types::PyString;
 use maxminddb::geoip2;
 
 #[pymodule]
-fn numpy_maxminddb(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn pandas_maxminddb(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
   #[pyfn(m)]
   #[pyo3()]
-  fn geolocate<'py>(
+  fn mmdb_geolocate<'py>(
     py: Python<'py>,
     ips: PyReadonlyArrayDyn<PyObject>,
   ) -> &'py PyArrayDyn<PyObject> {
