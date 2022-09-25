@@ -1,7 +1,7 @@
 use std::net::IpAddr;
-use numpy::{IntoPyArray, PyArrayDyn, PyReadonlyArrayDyn};
+use numpy::{IntoPyArray, PyReadonlyArrayDyn};
 use pyo3::{pymodule, PyObject, PyResult, Python, ToPyObject, types::PyModule};
-use pyo3::types::PyString;
+use pyo3::types::{PyDict, PyString};
 use pyo3::prelude::*;
 
 use maxminddb::geoip2;
@@ -10,10 +10,10 @@ use maxminddb::geoip2;
 fn mmdb_geolocate<'py>(
   py: Python<'py>,
   ips: PyReadonlyArrayDyn<PyObject>,
-) -> &'py PyArrayDyn<PyObject> {
+) -> &'py PyDict {
   let reader = maxminddb::Reader::open_readfile("GeoLite2-City.mmdb").unwrap();
 
-  ips
+  let cities = ips
       .as_array()
       .map(|s| {
         let ip = s.to_string().parse::<IpAddr>().unwrap();
@@ -22,7 +22,12 @@ fn mmdb_geolocate<'py>(
 
         PyString::new(py, ccode).to_object(py)
       })
-      .into_pyarray(py)
+      .into_pyarray(py);
+
+  let dict = PyDict::new(py);
+  dict.set_item(PyString::new(py, "city"), cities).unwrap();
+
+  dict
 }
 
 #[pymodule]

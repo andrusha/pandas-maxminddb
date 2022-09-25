@@ -15,7 +15,7 @@ class GeoAccessor:
         """
         :return: appends geolocation information based on the given IP address column
         """
-        columns = mmdb_geolocate(self._obj[ip_column_name].values())
+        columns = mmdb_geolocate(self._obj[ip_column_name].values)
         for k, v in columns.items():
             self._obj[k] = v
         return self._obj

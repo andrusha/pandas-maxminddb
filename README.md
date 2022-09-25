@@ -1,3 +1,8 @@
+## Todo
+- [ ] Add type annotations https://maturin.rs/project_layout.html
+- [ ] Distribute for multiple python versions https://pyo3.rs/v0.17.1/building_and_distribution.html
+- 
+
 ## Develop
 
 - `asdf install`
