@@ -21,14 +21,14 @@ use thiserror::Error;
 // todo: into PyErr
 #[derive(Error, Debug)]
 enum PandasMaxmindError {
-  #[error("unknown geo column")]
-  ParseColumnError
+  #[error("invalid geo column name: {0}")]
+  ParseColumnError(String)
 }
 
 impl From<PandasMaxmindError> for PyErr {
   fn from(e: PandasMaxmindError) -> Self {
     match e {
-      PandasMaxmindError::ParseColumnError => PyKeyError::new_err(e.to_string())
+      PandasMaxmindError::ParseColumnError(_) => PyKeyError::new_err(e.to_string())
     }
   }
 }
@@ -58,7 +58,7 @@ impl FromStr for GeoColumn {
       "longitude" => Ok(Longitude),
       "latitude" => Ok(Latitude),
       "accuracy_radius" => Ok(AccuracyRadius),
-      _ => Err(PandasMaxmindError::ParseColumnError)
+      _ => Err(PandasMaxmindError::ParseColumnError(s.to_string()))
     }
   }
 }
@@ -79,9 +79,7 @@ impl IntoPy<PyObject> for GeoColumn {
 
 impl<'source> FromPyObject<'source> for GeoColumn {
   fn extract(ob: &'source PyAny) -> PyResult<Self> {
-    let s = ob.extract::<&str>()?;
-
-    Ok(GeoColumn::from_str(s)?)
+    Ok(GeoColumn::from_str(ob.extract()?)?)
   }
 }
 
@@ -89,9 +87,10 @@ impl<'source> FromPyObject<'source> for GeoColumn {
 fn mmdb_geolocate<'py>(
   py: Python<'py>,
   ips: PyReadonlyArray1<PyObject>,
+  mmdb_path: &str,
   columns: Vec<GeoColumn>
 ) -> &'py PyDict {
-  let reader = maxminddb::Reader::open_readfile("GeoLite2-City.mmdb").unwrap();
+  let reader = maxminddb::Reader::open_readfile(mmdb_path).unwrap();
 
   println!("{:#?}", columns);
 

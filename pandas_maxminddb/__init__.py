@@ -11,11 +11,14 @@ class GeoAccessor:
     def __init__(self, pandas_obj: pd.DataFrame):
         self._obj = pandas_obj
 
-    def geolocate(self, ip_column_name: str, mmdb_path: str, geo_columns=["country", "city"]) -> pd.DataFrame:
+    def geolocate(self, ip_column_name: str, mmdb_path: str, geo_columns: list = None) -> pd.DataFrame:
         """
         :return: appends geolocation information based on the given IP address column
         """
-        columns = mmdb_geolocate(self._obj[ip_column_name].values, geo_columns)
+        if geo_columns is None:
+            geo_columns = ["country", "city"]
+
+        columns = mmdb_geolocate(self._obj[ip_column_name].values, mmdb_path, geo_columns)
         for k, v in columns.items():
             self._obj[k] = v
         return self._obj
