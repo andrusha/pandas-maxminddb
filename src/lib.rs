@@ -7,7 +7,7 @@ use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1, PyReadwriteArray1};
 use pyo3::{pymodule, PyObject, PyResult, Python, ToPyObject, types::PyModule};
 use pyo3::exceptions::PyKeyError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyString};
+use pyo3::types::PyString;
 use thiserror::Error;
 
 // country=none_if_exception(lambda: geo["country"]["names"]["en"]),
@@ -33,7 +33,8 @@ impl From<PandasMaxmindError> for PyErr {
   }
 }
 
-#[derive(Debug)]
+// Derive FromPyObject https://pyo3.rs/v0.15.1/conversions/traits.html
+#[derive(Debug, Hash, Eq, PartialEq)]
 enum GeoColumn {
   Country,
   State,
@@ -63,8 +64,8 @@ impl FromStr for GeoColumn {
   }
 }
 
-impl IntoPy<PyObject> for GeoColumn {
-  fn into_py(self, py: Python<'_>) -> PyObject {
+impl ToPyObject for GeoColumn {
+  fn to_object(&self, py: Python<'_>) -> PyObject {
     match self {
       GeoColumn::Country => "country".into_py(py),
       GeoColumn::State => "state".into_py(py),
@@ -74,6 +75,12 @@ impl IntoPy<PyObject> for GeoColumn {
       GeoColumn::Latitude => "latitude".into_py(py),
       GeoColumn::AccuracyRadius => "accuracy_radius".into_py(py),
     }
+  }
+}
+
+impl IntoPy<PyObject> for GeoColumn {
+  fn into_py(self, py: Python<'_>) -> PyObject {
+    self.to_object(py)
   }
 }
 
@@ -89,10 +96,8 @@ fn mmdb_geolocate<'py>(
   ips: PyReadonlyArray1<PyObject>,
   mmdb_path: &str,
   columns: Vec<GeoColumn>
-) -> &'py PyDict {
+) -> HashMap<GeoColumn, &'py PyArray1<PyObject>> {
   let reader = maxminddb::Reader::open_readfile(mmdb_path).unwrap();
-
-  println!("{:#?}", columns);
 
   // let res: HashMap<GeoColumn, Vec<PyObject>> = HashMap::new();
   // for c in columns.into_iter() {
@@ -110,10 +115,10 @@ fn mmdb_geolocate<'py>(
       })
       .into_pyarray(py);
 
-  let dict = PyDict::new(py);
-  dict.set_item(PyString::new(py, "city"), cities).unwrap();
+  let mut res = HashMap::new();
+  res.insert(GeoColumn::City, cities);
 
-  dict
+  res
 }
 
 #[pymodule]
