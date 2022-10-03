@@ -4,7 +4,7 @@ use crate::errors::PandasMaxmindError;
 
 
 // Derive FromPyObject https://pyo3.rs/v0.15.1/conversions/traits.html
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
 pub enum GeoColumn {
   Country,
   State,
