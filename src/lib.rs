@@ -78,7 +78,7 @@ fn mmdb_geolocate<'py>(
 
     // Convert to the PyArray
     let mut res = HashMap::with_capacity(temp.len());
-    for (k, v) in temp {
+    for (k, v) in temp.drain() {
         res.insert(k, PyArray1::from_vec(py, v));
     }
 
