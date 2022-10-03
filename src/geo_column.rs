@@ -1,7 +1,8 @@
-use pyo3::{FromPyObject, IntoPy, PyAny, PyObject, PyResult, Python, ToPyObject};
 use std::str::FromStr;
-use crate::errors::PandasMaxmindError;
 
+use pyo3::{FromPyObject, IntoPy, PyAny, PyObject, PyResult, Python, ToPyObject};
+
+use crate::errors::PandasMaxmindError;
 
 // Derive FromPyObject https://pyo3.rs/v0.15.1/conversions/traits.html
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
@@ -29,7 +30,7 @@ impl FromStr for GeoColumn {
       "longitude" => Ok(Longitude),
       "latitude" => Ok(Latitude),
       "accuracy_radius" => Ok(AccuracyRadius),
-      _ => Err(PandasMaxmindError::ParseColumnError(s.to_string()))
+      _ => Err(PandasMaxmindError::ParseColumnError(s.to_string())),
     }
   }
 }
