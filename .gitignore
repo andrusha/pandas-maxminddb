@@ -6,3 +6,4 @@
 .benchmarks
 .pytest_cache
 __pycache__
+pandas_maxminddb/*.so
