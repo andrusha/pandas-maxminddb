@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 
-use maxminddb::{geoip2, Reader};
+use maxminddb::{geoip2, MaxMindDBError, Reader};
 use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::{pymodule, types::PyModule, PyObject, PyResult, Python, ToPyObject};
@@ -106,7 +106,8 @@ fn mmdb_geolocate<'py>(
     mmdb_path: &str,
     columns: Vec<GeoColumn>,
 ) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
-    let reader = maxminddb::Reader::open_readfile(mmdb_path).unwrap();
+    let reader = maxminddb::Reader::open_readfile(mmdb_path)
+        .map_err(<MaxMindDBError as Into<PandasMaxmindError>>::into)?;
 
     let mut temp = geolocate(py, ips, &reader, columns)?;
     let mut res = HashMap::with_capacity(temp.len());
