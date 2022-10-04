@@ -8,24 +8,42 @@ use pyo3::{pymodule, types::PyModule, PyObject, PyResult, Python, ToPyObject};
 
 use geo_column::GeoColumn;
 
+use crate::errors::PandasMaxmindError;
+
 mod errors;
 mod geo_column;
+
+// Treats missing lookup as non-critical error
+// in order to short-circuit execution down the line
+fn lookup_ip<'py>(
+    ip: &str,
+    reader: &'py Reader<Vec<u8>>,
+) -> Result<Option<geoip2::City<'py>>, PandasMaxmindError> {
+    let ip = ip.parse::<IpAddr>();
+
+    match ip {
+        Ok(ip) => match reader.lookup(ip) {
+            Ok(l) => Ok(Some(l)),
+            Err(maxminddb::MaxMindDBError::AddressNotFoundError(_)) => Ok(None),
+            Err(e) => Err(e.into()),
+        },
+        Err(_) => Ok(None),
+    }
+}
 
 fn geolocate<'py>(
     py: Python<'py>,
     ips: PyReadonlyArray1<PyObject>,
     reader: &Reader<Vec<u8>>,
     columns: Vec<GeoColumn>,
-) -> HashMap<GeoColumn, Vec<PyObject>> {
+) -> Result<HashMap<GeoColumn, Vec<PyObject>>, PandasMaxmindError> {
     let mut res = HashMap::with_capacity(columns.len());
     for &c in columns.iter() {
         res.insert(c, Vec::with_capacity(ips.len()));
     }
 
     for ip in ips.as_array().iter() {
-        let ip = ip.to_string().parse::<IpAddr>().unwrap();
-        // todo: match errors properly, fail on everything but address lookup
-        let lookup: Option<geoip2::City> = reader.lookup(ip).ok();
+        let lookup: Option<geoip2::City> = lookup_ip(&ip.to_string(), reader)?;
 
         for (col, vec) in res.iter_mut() {
             let v = match col {
@@ -78,7 +96,7 @@ fn geolocate<'py>(
         }
     }
 
-    res
+    Ok(res)
 }
 
 #[pyfunction]
@@ -87,16 +105,16 @@ fn mmdb_geolocate<'py>(
     ips: PyReadonlyArray1<PyObject>,
     mmdb_path: &str,
     columns: Vec<GeoColumn>,
-) -> HashMap<GeoColumn, &'py PyArray1<PyObject>> {
+) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
     let reader = maxminddb::Reader::open_readfile(mmdb_path).unwrap();
 
-    let mut temp = geolocate(py, ips, &reader, columns);
+    let mut temp = geolocate(py, ips, &reader, columns)?;
     let mut res = HashMap::with_capacity(temp.len());
     for (k, v) in temp.drain() {
         res.insert(k, v.into_pyarray(py));
     }
 
-    res
+    Ok(res)
 }
 
 #[pymodule]
