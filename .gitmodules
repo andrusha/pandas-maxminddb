@@ -1,0 +1,4 @@
+[submodule "GeoLite.mmdb"]
+	path = GeoLite.mmdb
+	url = git@github.com:P3TERX/GeoLite.mmdb.git
+	branch = download

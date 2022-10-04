@@ -7,6 +7,7 @@
 
 ## Develop
 
+- `git clone --recurse-submodules git@github.com:andrusha/pandas-maxminddb.git`
 - `asdf install`
 - `python -m venv .venv`
 - `source .venv/bin/activate`

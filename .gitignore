@@ -1,6 +1,5 @@
 /target
 .venv
-*.mmdb
 !.tool-versions
 .nox
 .benchmarks

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 
-use maxminddb::geoip2;
-use numpy::{PyArray1, PyReadonlyArray1};
+use maxminddb::{geoip2, Reader};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::{pymodule, types::PyModule, PyObject, PyResult, Python, ToPyObject};
 
@@ -11,26 +11,23 @@ use geo_column::GeoColumn;
 mod errors;
 mod geo_column;
 
-#[pyfunction]
-fn mmdb_geolocate<'py>(
+fn geolocate<'py>(
     py: Python<'py>,
     ips: PyReadonlyArray1<PyObject>,
-    mmdb_path: &str,
+    reader: &Reader<Vec<u8>>,
     columns: Vec<GeoColumn>,
-) -> HashMap<GeoColumn, &'py PyArray1<PyObject>> {
-    let reader = maxminddb::Reader::open_readfile(mmdb_path).unwrap();
-
-    let mut temp: HashMap<GeoColumn, Vec<PyObject>> = HashMap::with_capacity(columns.len());
+) -> HashMap<GeoColumn, Vec<PyObject>> {
+    let mut res = HashMap::with_capacity(columns.len());
     for &c in columns.iter() {
-        temp.insert(c, Vec::with_capacity(ips.len()));
+        res.insert(c, Vec::with_capacity(ips.len()));
     }
 
     for ip in ips.as_array().iter() {
         let ip = ip.to_string().parse::<IpAddr>().unwrap();
         let lookup: geoip2::City = reader.lookup(ip).unwrap();
 
-        for c in columns.iter() {
-            let v = match c {
+        for (col, vec) in res.iter_mut() {
+            let v = match col {
                 GeoColumn::Country => lookup
                     .country
                     .as_ref()
@@ -72,14 +69,26 @@ fn mmdb_geolocate<'py>(
                     .to_object(py),
             };
 
-            temp.get_mut(c).unwrap().push(v);
+            vec.push(v);
         }
     }
 
-    // Convert to the PyArray
+    res
+}
+
+#[pyfunction]
+fn mmdb_geolocate<'py>(
+    py: Python<'py>,
+    ips: PyReadonlyArray1<PyObject>,
+    mmdb_path: &str,
+    columns: Vec<GeoColumn>,
+) -> HashMap<GeoColumn, &'py PyArray1<PyObject>> {
+    let reader = maxminddb::Reader::open_readfile(mmdb_path).unwrap();
+
+    let mut temp = geolocate(py, ips, &reader, columns);
     let mut res = HashMap::with_capacity(temp.len());
     for (k, v) in temp.drain() {
-        res.insert(k, PyArray1::from_vec(py, v));
+        res.insert(k, v.into_pyarray(py));
     }
 
     res
