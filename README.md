@@ -27,13 +27,20 @@ ips
 - [ ] Add type annotations https://maturin.rs/project_layout.html
 - [ ] Distribute for multiple python versions https://pyo3.rs/v0.17.1/building_and_distribution.html
 - [ ] Figure out GIL https://pyo3.rs/v0.17.1/types.html
-- [ ] Add error handling
 
 ## Develop
 
+### Setting up environment
 - `git clone --recurse-submodules git@github.com:andrusha/pandas-maxminddb.git`
 - `asdf install`
 - `python -m venv .venv`
 - `source .venv/bin/activate`
 - `pip install nox`
 - `nox -s test`
+
+### libmaxminddb
+In order to run `nox -s bench` properly you would need [libmaxminddb](https://github.com/maxmind/libmaxminddb) installed as per [maxminddb](https://maxminddb.readthedocs.io/en/latest/index.html) instructions prior to installing Python package, so that C-extension could be benchmarked properly.
+
+On macOS this would require following:
+- `brew instal libmaxminddb`
+- `PATH="/opt/homebrew/Cellar/libmaxminddb/1.7.1/bin:$PATH" LDFLAGS="-L/opt/homebrew/Cellar/libmaxminddb/1.7.1/lib" CPPFLAGS="-I/opt/homebrew/Cellar/libmaxminddb/1.7.1/include" pip install maxminddb --force-reinstall --verbose --no-cache-dir`

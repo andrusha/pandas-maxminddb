@@ -30,12 +30,49 @@ def random_ips():
     ]
 
 
-def test_benchmark_python_maxminddb(benchmark):
-    pass
+def py_get_geo(reader, ip):
+    def none_if_exception(m):
+        try:
+            return m()
+        except:
+            return None
+
+    try:
+        geo = reader.get(ip)
+
+        return dict(
+            country=none_if_exception(lambda: geo["country"]["names"]["en"]),
+            state=none_if_exception(lambda: geo["subdivisions"][0]["names"]["en"]),
+            city=none_if_exception(lambda: geo["city"]["names"]["en"]),
+            postcode=none_if_exception(lambda: geo["postal"]["code"]),
+            longitude=none_if_exception(lambda: float(geo["location"]["longitude"])),
+            latitude=none_if_exception(lambda: float(geo["location"]["latitude"])),
+            accuracy_radius=none_if_exception(lambda: int(geo["location"]["accuracy_radius"])),
+        )
+    except (KeyError, ValueError) as err:
+        return None
 
 
-def test_benchmark_c_maxminddb(benchmark):
-    pass
+def py_geolocate(reader, df):
+    geos = df["ip"].map(lambda ip: py_get_geo(reader, ip))
+    geos = pd.json_normalize(geos)
+    return pd.concat([df, geos], axis=1)
+
+
+def test_benchmark_python_maxminddb(benchmark, random_ips):
+    import maxminddb
+
+    ips = pd.DataFrame(data={'ip': random_ips})
+    with maxminddb.open_database(GEOLITE_CITY_MMDB, maxminddb.MODE_MMAP) as reader:
+        benchmark(py_geolocate, reader, ips)
+
+
+def test_benchmark_c_maxminddb(benchmark, random_ips):
+    import maxminddb
+
+    ips = pd.DataFrame(data={'ip': random_ips})
+    with maxminddb.open_database(GEOLITE_CITY_MMDB, maxminddb.MODE_MMAP_EXT) as reader:
+        benchmark(py_geolocate, reader, ips)
 
 
 def test_benchmark_pandas_maxminddb(benchmark, random_ips):

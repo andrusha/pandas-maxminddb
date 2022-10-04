@@ -1,3 +1,5 @@
+pygal
+pygaljs
 pytest
-pytest-benchmark
+pytest-benchmark[histogram]
 maxminddb
