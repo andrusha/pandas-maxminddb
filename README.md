@@ -11,7 +11,7 @@ import pandas as pd
 import pandas_maxminddb
 
 ips = pd.DataFrame(data={'ip': ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]})
-ips.geo.geolocate('ip', './GeoLite2-City.mmdb', ['country', 'city', 'state', 'postcode'])
+ips.geo.geolocate('ip', './GeoLite.mmdb/GeoLite2-City.mmdb', ['country', 'city', 'state', 'postcode'])
 ips
 ```
 
@@ -22,7 +22,6 @@ ips
 | 2   |94.226.237.31  |Kapellen   |2950    |VLG  |BE     |
 | 3   |128.119.189.49 |Northampton|01060   |MA   |US     |
 | 4   |2.30.253.245   |London     |SW15    |ENG  |GB     |
-
 
 ## Todo
 - [ ] Add type annotations https://maturin.rs/project_layout.html

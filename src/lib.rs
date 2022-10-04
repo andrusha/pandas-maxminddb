@@ -24,47 +24,52 @@ fn geolocate<'py>(
 
     for ip in ips.as_array().iter() {
         let ip = ip.to_string().parse::<IpAddr>().unwrap();
-        let lookup: geoip2::City = reader.lookup(ip).unwrap();
+        // todo: match errors properly, fail on everything but address lookup
+        let lookup: Option<geoip2::City> = reader.lookup(ip).ok();
 
         for (col, vec) in res.iter_mut() {
             let v = match col {
                 GeoColumn::Country => lookup
-                    .country
                     .as_ref()
+                    .and_then(|l| l.country.as_ref())
                     .and_then(|c| c.iso_code)
                     .to_object(py),
 
                 GeoColumn::State => lookup
-                    .subdivisions
                     .as_ref()
+                    .and_then(|l| l.subdivisions.as_ref())
                     .and_then(|sd| sd.first())
                     .and_then(|s| s.iso_code)
                     .to_object(py),
 
                 GeoColumn::City => lookup
-                    .city
                     .as_ref()
+                    .and_then(|l| l.city.as_ref())
                     .and_then(|c| c.names.as_ref())
                     .and_then(|n| n.get("en"))
                     .to_object(py),
 
-                GeoColumn::Postcode => lookup.postal.as_ref().and_then(|c| c.code).to_object(py),
+                GeoColumn::Postcode => lookup
+                    .as_ref()
+                    .and_then(|l| l.postal.as_ref())
+                    .and_then(|c| c.code)
+                    .to_object(py),
 
                 GeoColumn::Longitude => lookup
-                    .location
                     .as_ref()
+                    .and_then(|l| l.location.as_ref())
                     .and_then(|l| l.longitude)
                     .to_object(py),
 
                 GeoColumn::Latitude => lookup
-                    .location
                     .as_ref()
+                    .and_then(|l| l.location.as_ref())
                     .and_then(|l| l.latitude)
                     .to_object(py),
 
                 GeoColumn::AccuracyRadius => lookup
-                    .location
                     .as_ref()
+                    .and_then(|l| l.location.as_ref())
                     .and_then(|l| l.accuracy_radius)
                     .to_object(py),
             };
