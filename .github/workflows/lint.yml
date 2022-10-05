@@ -1,0 +1,22 @@
+on: push
+
+jobs:
+  lint_python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    - run: pip install nox
+    - run: nox -s lint
+
+  lint_rust:
+    name: Lint Rust
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: rustup component add clippy
+    - run: cargo clippy
