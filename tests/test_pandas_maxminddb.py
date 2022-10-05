@@ -35,7 +35,7 @@ def py_get_geo(reader, ip):
     def none_if_exception(m):
         try:
             return m()
-        except KeyError:
+        except (KeyError, TypeError):
             return None
 
     try:

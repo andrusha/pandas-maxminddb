@@ -22,9 +22,6 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
 ]
 
-[tool.pytest.ini_options]
-addopts = "--benchmark-disable"
-
 [tool.black]
 line-length = 120
 include = '\.pyi?$'
