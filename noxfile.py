@@ -15,7 +15,7 @@ def test(session):
 def bench(session):
     session.install("-rrequirements-dev.txt")
     session.install(".")
-    session.run("pytest", "--benchmark-enable", "--benchmark-histogram")
+    session.run("pytest", "--benchmark-only", "--benchmark-histogram")
 
 
 @nox.session
