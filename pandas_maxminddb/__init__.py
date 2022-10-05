@@ -1,10 +1,10 @@
 import pandas as pd
-from .pandas_maxminddb import *
-from .pandas_maxminddb import __all__, __doc__
 
-__all__ = __all__ + [
-    "GeoAccessor"
-]
+from .pandas_maxminddb import *  # noqa: F403
+from .pandas_maxminddb import __all__, __doc__  # noqa: F401
+
+__all__ = __all__ + ["GeoAccessor"]
+
 
 @pd.api.extensions.register_dataframe_accessor("geo")
 class GeoAccessor:
@@ -18,7 +18,7 @@ class GeoAccessor:
         if geo_columns is None:
             geo_columns = ["country", "city"]
 
-        columns = mmdb_geolocate(self._obj[ip_column_name].values, mmdb_path, geo_columns)
+        columns = mmdb_geolocate(self._obj[ip_column_name].values, mmdb_path, geo_columns)  # noqa: F405
         for k, v in columns.items():
             self._obj[k] = v
         return self._obj
