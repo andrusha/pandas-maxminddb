@@ -13,6 +13,24 @@ use crate::errors::PandasMaxmindError;
 mod errors;
 mod geo_column;
 
+// DB is loaded into memory fully, this is container class
+// which is later used to create a context
+#[pyclass(name = "Reader")]
+struct PyReader {
+    reader: Reader<Vec<u8>>,
+}
+
+#[pymethods]
+impl PyReader {
+    #[new]
+    fn new(mmdb_path: &str) -> PyResult<Self> {
+        let reader = Reader::open_readfile(mmdb_path)
+            .map_err(<MaxMindDBError as Into<PandasMaxmindError>>::into)?;
+
+        Ok(PyReader { reader })
+    }
+}
+
 // Treats missing lookup as non-critical error
 // in order to short-circuit execution down the line
 fn lookup_ip<'py>(
@@ -103,13 +121,10 @@ fn geolocate<'py>(
 fn mmdb_geolocate<'py>(
     py: Python<'py>,
     ips: PyReadonlyArray1<PyObject>,
-    mmdb_path: &str,
+    reader: &PyReader,
     columns: Vec<GeoColumn>,
 ) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
-    let reader = maxminddb::Reader::open_readfile(mmdb_path)
-        .map_err(<MaxMindDBError as Into<PandasMaxmindError>>::into)?;
-
-    let mut temp = geolocate(py, ips, &reader, columns)?;
+    let mut temp = geolocate(py, ips, &reader.reader, columns)?;
     let mut res = HashMap::with_capacity(temp.len());
     for (k, v) in temp.drain() {
         res.insert(k, v.into_pyarray(py));
@@ -120,6 +135,7 @@ fn mmdb_geolocate<'py>(
 
 #[pymodule]
 fn pandas_maxminddb(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    m.add_class::<PyReader>()?;
     m.add_function(wrap_pyfunction!(mmdb_geolocate, m)?)?;
 
     Ok(())

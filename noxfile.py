@@ -21,7 +21,6 @@ def bench(session):
 @nox.session
 def lint(session):
     session.install("-rrequirements-lint.txt")
-    session.run("isort", "--check", ".")
     session.run("black", "--check", ".")
     session.run("flake8", ".")
 

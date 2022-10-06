@@ -10,9 +10,11 @@ def test_geolocation():
     ips = pd.DataFrame(
         data={"ip": ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]}
     )
-    ips.geo.geolocate(
-        "ip", GEOLITE_CITY_MMDB, ["country", "city", "state", "postcode", "latitude", "longitude", "accuracy_radius"]
-    )
+    with pandas_maxminddb.open_database(GEOLITE_CITY_MMDB) as reader:
+        ips.geo.geolocate(
+            "ip", reader, ["country", "city", "state", "postcode", "latitude", "longitude", "accuracy_radius"]
+        )
+
     assert ips["country"].tolist() == ["US", "CA", "BE", "US", "GB"]
     assert ips["city"].tolist() == ["Houston", "Montreal", "Kapellen", "Northampton", "London"]
     assert ips["state"].tolist() == ["TX", "QC", "VLG", "MA", "ENG"]
@@ -78,9 +80,10 @@ def test_benchmark_c_maxminddb(benchmark, random_ips):
 
 def test_benchmark_pandas_maxminddb(benchmark, random_ips):
     ips = pd.DataFrame(data={"ip": random_ips})
-    benchmark(
-        ips.geo.geolocate,
-        "ip",
-        GEOLITE_CITY_MMDB,
-        ["country", "city", "state", "postcode", "latitude", "longitude", "accuracy_radius"],
-    )
+    with pandas_maxminddb.open_database(GEOLITE_CITY_MMDB) as reader:
+        benchmark(
+            ips.geo.geolocate,
+            "ip",
+            reader,
+            ["country", "city", "state", "postcode", "latitude", "longitude", "accuracy_radius"],
+        )
