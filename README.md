@@ -1,6 +1,6 @@
 # Pandas Maxmind
 
-Provides fast and convenient geolocation bindings for Pandas Dataframes. Uses numpy ndarray's internally to speed it up compared to naively applying function per column.  
+Provides fast and convenient geolocation bindings for [Pandas](https://pandas.pydata.org/) Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up compared to naively applying function per column.  
 
 ## Usage
 
@@ -31,15 +31,19 @@ ips
 |test_benchmark_c_maxminddb                                                                                                                                                                                        |986.0314 (3.61)|1,002.4413 (3.52)|995.7461 (3.55)|8.3891 (1.85)|1,001.3420 (3.55)|15.1085 (2.53)|2;0     |1.0043 (0.28)|5         |1         |
 |test_benchmark_python_maxminddb                                                                                                                                                                                   |9,011.4650 (32.98)|9,286.9635 (32.60)|9,081.2087 (32.38)|117.9029 (25.94)|9,020.5363 (32.02)|114.9376 (19.25)|1;0     |0.1101 (0.03)|5         |1         |
 
+## Extending
+
+Due to Dataframe columns being flat arrays and geolocation data coming in a hierarchical format you might need to provide more mappings to serve your particular use-case. In order to do that follow Development section to setup your environment and then:
+
+1. Add column name to the [geo_column.rs](./src/geo_column.rs)
+2. Add column mapping to the [geolocate.rs](./src/geolocate.rs)
 
 ## Todo
 - [ ] Add type annotations https://maturin.rs/project_layout.html
 - [ ] Distribute for multiple python versions https://pyo3.rs/v0.17.1/building_and_distribution.html
 - [ ] Figure out GIL https://pyo3.rs/v0.17.1/types.html
 
-## Develop
-
-### Extending
+## Development
 
 ### Setting up environment
 - `git clone --recurse-submodules git@github.com:andrusha/pandas-maxminddb.git`
