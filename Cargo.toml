@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.17.1", features = ["extension-module"] }
 numpy = "0.17.1"
-maxminddb = "0.23.0"
+maxminddb = { version = "0.23.0", features = ["mmap"] }
 thiserror = "1.0.36"
 
 [build-dependencies]

@@ -8,10 +8,11 @@ By importing `pandas_maxminddb` you add Pandas `geo` extension which allows you 
 
 ```python
 import pandas as pd
-import pandas_maxminddb
+from pandas_maxminddb import open_database
 
 ips = pd.DataFrame(data={'ip': ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]})
-ips.geo.geolocate('ip', './GeoLite.mmdb/GeoLite2-City.mmdb', ['country', 'city', 'state', 'postcode'])
+with open_database('./GeoLite.mmdb/GeoLite2-City.mmdb') as reader:
+    ips.geo.geolocate('ip', reader, ['country', 'city', 'state', 'postcode'])
 ips
 ```
 
@@ -37,6 +38,8 @@ ips
 - [ ] Figure out GIL https://pyo3.rs/v0.17.1/types.html
 
 ## Develop
+
+### Extending
 
 ### Setting up environment
 - `git clone --recurse-submodules git@github.com:andrusha/pandas-maxminddb.git`

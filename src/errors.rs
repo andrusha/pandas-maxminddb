@@ -1,4 +1,4 @@
-use pyo3::exceptions::{PyKeyError, PyRuntimeError};
+use pyo3::exceptions::{PyKeyError, PyRuntimeError, PyTypeError};
 use pyo3::PyErr;
 use thiserror::Error;
 
@@ -9,6 +9,9 @@ pub enum PandasMaxmindError {
 
     #[error("invalid geo column name: {0}")]
     ParseColumnError(String),
+
+    #[error("unsupported reader class")]
+    UnsupportedReaderError,
 }
 
 impl From<PandasMaxmindError> for PyErr {
@@ -17,6 +20,7 @@ impl From<PandasMaxmindError> for PyErr {
 
         match e {
             MaxMindDBError(_) => PyRuntimeError::new_err(e.to_string()),
+            UnsupportedReaderError => PyTypeError::new_err(e.to_string()),
             ParseColumnError(_) => PyKeyError::new_err(e.to_string()),
         }
     }

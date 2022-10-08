@@ -2,14 +2,17 @@ from contextlib import contextmanager
 
 import pandas as pd
 
-from .pandas_maxminddb import Reader, __all__, __doc__, mmdb_geolocate  # noqa: F401
+from .pandas_maxminddb import Reader, ReaderMem, ReaderMmap, __all__, __doc__, mmdb_geolocate  # noqa: F401
 
 __all__ = __all__ + ["GeoAccessor"]
 
 
 @contextmanager
-def open_database(mmdb_path: str) -> Reader:
-    yield Reader(mmdb_path)
+def open_database(mmdb_path: str, mmap=False) -> Reader:
+    if mmap:
+        yield ReaderMmap(mmdb_path)
+    else:
+        yield ReaderMem(mmdb_path)
 
 
 @pd.api.extensions.register_dataframe_accessor("geo")
