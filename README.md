@@ -1,6 +1,6 @@
 # Pandas Maxmind
 
-Provides fast and convenient geolocation bindings for [Pandas](https://pandas.pydata.org/) Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up compared to naively applying function per column.  
+Provides fast and convenient geolocation bindings for [Pandas](https://pandas.pydata.org/) Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up compared to naively applying function per column. Based on the [maxminddb-rust](https://github.com/oschwald/maxminddb-rust).  
 
 ## Usage
 
@@ -47,11 +47,12 @@ Due to Dataframe columns being flat arrays and geolocation data coming in a hier
 
 ### Setting up environment
 - `git clone --recurse-submodules git@github.com:andrusha/pandas-maxminddb.git`
-- `asdf install`
-- `python -m venv .venv`
+- `PYTHON_CONFIGURE_OPTS="--enable-shared" asdf install`
+- `PYTHON_CONFIGURE_OPTS="--enable-shared" python -m venv .venv`
 - `source .venv/bin/activate`
 - `pip install nox`
 - `nox -s test`
+- `PYTHONPATH=.venv/lib/python3.10/site-packages cargo test --no-default-features`
 
 ### libmaxminddb
 In order to run `nox -s bench` properly you would need [libmaxminddb](https://github.com/maxmind/libmaxminddb) installed as per [maxminddb](https://maxminddb.readthedocs.io/en/latest/index.html) instructions prior to installing Python package, so that C-extension could be benchmarked properly.

@@ -11,6 +11,27 @@ def test(session):
     session.run("pytest", "--benchmark-skip")
 
 
+@nox.session(python=False)
+def test_linux_docker(session):
+    # In order to run in Linux environment, while developing on another OS
+    import os
+
+    session.run("docker", "build", "-t", "pandas_maxminddb", ".")
+    pwd = os.getcwd()
+    session.run(
+        "docker",
+        "run",
+        "--rm",
+        "-t",
+        "-v",
+        f"{pwd}:/code",
+        "pandas_maxminddb",
+        "/root/.cargo/bin/cargo",
+        "test",
+        "--no-default-features",
+    )
+
+
 @nox.session
 def bench(session):
     session.install("-rrequirements-dev.txt")
@@ -18,14 +39,14 @@ def bench(session):
     session.run("pytest", "--benchmark-only", "--benchmark-histogram")
 
 
-@nox.session
+@nox.session(reuse_venv=True)
 def lint(session):
     session.install("-rrequirements-lint.txt")
     session.run("black", "--check", ".")
     session.run("flake8", ".")
 
 
-@nox.session
+@nox.session(reuse_venv=True)
 def format(session):
     session.install("-rrequirements-lint.txt")
     session.run("isort", ".")
