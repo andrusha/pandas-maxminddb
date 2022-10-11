@@ -11,8 +11,8 @@ name = "pandas_maxminddb"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.17.1", features = ["extension-module"] }
-numpy = "0.17.1"
+pyo3 = "0.17.1"
+numpy = "0.17.2"
 maxminddb = { version = "0.23.0", features = ["mmap"] }
 thiserror = "1.0.36"
 
@@ -20,7 +20,9 @@ thiserror = "1.0.36"
 pyo3-build-config = "0.17.1"
 
 [features]
-abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
+abi3 = ["pyo3/abi3-py38", "pyo3-build-config/abi3-py38", "generate-import-lib"]
 generate-import-lib = ["pyo3/generate-import-lib"]
+extension-module = ["pyo3/extension-module"]
+default = ["extension-module"]
 
 [workspace]

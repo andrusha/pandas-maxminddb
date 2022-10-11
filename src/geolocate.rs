@@ -23,6 +23,36 @@ fn lookup_ip<'py, T: AsRef<[u8]>>(
     }
 }
 
+#[cfg(test)]
+mod test_lookup_ip {
+    use super::lookup_ip;
+    use maxminddb::Reader;
+
+    #[test]
+    fn ignores_wrong_ip() {
+        let reader = Reader::open_mmap("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
+        let res = lookup_ip("gibberish", &reader);
+        assert!(res.is_ok());
+        assert!(res.unwrap().is_none());
+    }
+
+    #[test]
+    fn ignores_missed_lookup() {
+        let reader = Reader::open_mmap("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
+        let res = lookup_ip("255.255.255.255", &reader);
+        assert!(res.is_ok());
+        assert!(res.unwrap().is_none());
+    }
+
+    #[test]
+    fn returns_result() {
+        let reader = Reader::open_mmap("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
+        let res = lookup_ip("75.63.106.74", &reader);
+        assert!(res.is_ok());
+        assert!(res.unwrap().is_some());
+    }
+}
+
 pub fn geolocate<'py, T: AsRef<[u8]>>(
     py: Python<'py>,
     ips: PyReadonlyArray1<PyObject>,
@@ -89,4 +119,70 @@ pub fn geolocate<'py, T: AsRef<[u8]>>(
     }
 
     Ok(res)
+}
+
+#[cfg(test)]
+mod test_geolocate {
+    use super::geolocate;
+    use crate::GeoColumn;
+    use maxminddb::Reader;
+    use numpy::{PyArray1, PyReadonlyArray1};
+    use pyo3::{PyObject, Python, ToPyObject};
+
+    #[test]
+    fn empty_ndarray() {
+        let reader = Reader::open_mmap("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
+
+        pyo3::prepare_freethreaded_python();
+        Python::with_gil(|py| {
+            let ips: PyReadonlyArray1<PyObject> = PyArray1::from_vec(py, Vec::new()).readonly();
+            let res = geolocate(py, ips, &reader, vec![GeoColumn::City]);
+            assert!(res.is_ok());
+            let hm = res.unwrap();
+            assert!(hm.contains_key(&GeoColumn::City));
+            assert!(hm[&GeoColumn::City].is_empty());
+        });
+    }
+
+    #[test]
+    fn geolocates() {
+        let reader = Reader::open_mmap("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
+        let ips = vec![
+            "75.63.106.74",
+            "255.255.255.255",
+            "gibberish",
+            "132.206.246.203",
+        ];
+
+        pyo3::prepare_freethreaded_python();
+        Python::with_gil(|py| {
+            let ips = ips.iter().map(|i| i.to_object(py)).collect();
+            let ips: PyReadonlyArray1<PyObject> = PyArray1::from_vec(py, ips).readonly();
+            let res = geolocate(py, ips, &reader, vec![GeoColumn::City, GeoColumn::Latitude]);
+            assert!(res.is_ok());
+            let hm = res.unwrap();
+            assert!(hm.contains_key(&GeoColumn::City));
+            assert!(hm.contains_key(&GeoColumn::Latitude));
+
+            let cities: Vec<Option<String>> = hm[&GeoColumn::City]
+                .iter()
+                .map(|c| c.extract(py).unwrap())
+                .collect();
+            assert_eq!(
+                cities,
+                vec![
+                    Some("Houston".to_string()),
+                    None,
+                    None,
+                    Some("Montreal".to_string())
+                ]
+            );
+
+            let latitudes: Vec<Option<f64>> = hm[&GeoColumn::Latitude]
+                .iter()
+                .map(|c| c.extract(py).unwrap())
+                .collect();
+            assert_eq!(latitudes, vec![Some(29.9787), None, None, Some(45.5063)]);
+        });
+    }
 }
