@@ -1,4 +1,0 @@
-autopep8
-black
-isort
-flake8

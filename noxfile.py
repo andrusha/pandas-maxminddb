@@ -1,12 +1,13 @@
 import nox
 
 nox.options.sessions = ["test"]
+dev_deps = ["maturin", "pygal", "pygaljs", "pytest", "pytest-benchmark[histogram]", "maxminddb"]
+lint_deps = ["autopep8", "black", "isort", "flake8"]
 
 
 @nox.session
 def test(session):
-    session.install("-rrequirements-dev.txt")
-    session.install("maturin")
+    session.install(*dev_deps)
     session.run_always("maturin", "develop")
     session.run("pytest", "--benchmark-skip")
 
@@ -34,21 +35,21 @@ def test_linux_docker(session):
 
 @nox.session
 def bench(session):
-    session.install("-rrequirements-dev.txt")
+    session.install(*dev_deps)
     session.install(".")
     session.run("pytest", "--benchmark-only", "--benchmark-histogram")
 
 
 @nox.session(reuse_venv=True)
 def lint(session):
-    session.install("-rrequirements-lint.txt")
+    session.install(*lint_deps)
     session.run("black", "--check", ".")
     session.run("flake8", ".")
 
 
 @nox.session(reuse_venv=True)
 def format(session):
-    session.install("-rrequirements-lint.txt")
+    session.install(*lint_deps)
     session.run("isort", ".")
     session.run("autopep8", "--in-place", "--recursive", ".")
     session.run("black", ".")

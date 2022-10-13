@@ -1,5 +1,0 @@
-pygal
-pygaljs
-pytest
-pytest-benchmark[histogram]
-maxminddb
