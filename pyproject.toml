@@ -6,7 +6,7 @@ build-backend = "maturin"
 name = "pandas-maxminddb"
 version = "0.1.0"
 description = "numpy maxminddb python bindings"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 license = {text = "Apache-2.0"}
 dependencies = [
     "pandas",

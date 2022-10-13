@@ -42,6 +42,8 @@ Due to Dataframe columns being flat arrays and geolocation data coming in a hier
 - [ ] Add type annotations https://maturin.rs/project_layout.html
 - [ ] Distribute for multiple python versions https://pyo3.rs/v0.17.1/building_and_distribution.html
 - [ ] Figure out GIL https://pyo3.rs/v0.17.1/types.html
+- [ ] Add multi-threading support
+- [ ] Add documentation and publish it
 
 ## Development
 
