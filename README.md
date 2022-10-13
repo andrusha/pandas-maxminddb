@@ -54,7 +54,7 @@ Due to Dataframe columns being flat arrays and geolocation data coming in a hier
 - `source .venv/bin/activate`
 - `pip install nox`
 - `nox -s test`
-- `PYTHONPATH=.venv/lib/python3.10/site-packages cargo test --no-default-features`
+- `PYTHONPATH=.venv/lib/python3.8/site-packages cargo test --no-default-features`
 
 ### libmaxminddb
 In order to run `nox -s bench` properly you would need [libmaxminddb](https://github.com/maxmind/libmaxminddb) installed as per [maxminddb](https://maxminddb.readthedocs.io/en/latest/index.html) instructions prior to installing Python package, so that C-extension could be benchmarked properly.

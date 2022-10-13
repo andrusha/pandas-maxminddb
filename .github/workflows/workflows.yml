@@ -55,6 +55,8 @@ jobs:
           default: true
       - uses: Swatinem/rust-cache@v2
         continue-on-error: true
+      - name: Prepare LD_LIBRARY_PATH (Ubuntu only)
+        run: echo LD_LIBRARY_PATH=${pythonLocation}/lib >> $GITHUB_ENV
       - run: pip install nox
       - run: nox -s test
 
