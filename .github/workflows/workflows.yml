@@ -55,10 +55,13 @@ jobs:
           default: true
       - uses: Swatinem/rust-cache@v2
         continue-on-error: true
-      - name: Prepare LD_LIBRARY_PATH (Ubuntu only)
-        run: echo LD_LIBRARY_PATH=${pythonLocation}/lib >> $GITHUB_ENV
       - run: pip install nox
-      - run: nox -s test
+      - name: Run tests
+        env:
+          PY_VERSION: ${{ matrix.python_version }}
+        run: |
+          echo "version=$PY_VERSION" > $(pwd)/pyo3.conf
+          PYO3_CONFIG_FILE=$(pwd)/pyo3.conf nox -s test
 
   test_rust:
     name: Test Rust
@@ -115,4 +118,7 @@ jobs:
       - name: Force reinstall maxminddb
         run: pip install maxminddb --force-reinstall --verbose --no-cache-dir
       - run: pip install nox
-      - run: nox -s bench
+      - name: Bench
+        run: |
+          echo "version=3.8" > $(pwd)/pyo3.conf
+          PYO3_CONFIG_FILE=$(pwd)/pyo3.conf nox -s test
