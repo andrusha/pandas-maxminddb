@@ -136,6 +136,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: false
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
@@ -149,24 +151,24 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           target: x86_64
-          args: --release --out dist --sdist
+          args: --release --sdist
       - name: Install built wheel - x86_64
         run: |
-          pip install pandas_maxminddb --no-index --find-links dist --force-reinstall
+          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Build wheels - universal2
         uses: messense/maturin-action@v1
         with:
-          args: --release --universal2 --out dist
+          args: --release --universal2
       - name: Install built wheel - universal2
         run: |
-          pip install pandas_maxminddb --no-index --find-links dist --force-reinstall
+          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: dist
+          path: target/wheels
 
   windows:
     name: Windows Build
@@ -190,16 +192,16 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          args: --release
       - name: Install built wheel
         run: |
-          pip install pandas_maxminddb --no-index --find-links dist --force-reinstall
+          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: dist
+          path: target/wheels
 
   linux:
     name: Linux Build
@@ -224,17 +226,17 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist
+          args: --release
       - name: Install built wheel
         if: matrix.target == 'x86_64'
         run: |
-          pip install pandas_maxminddb --no-index --find-links dist --force-reinstall
+          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: dist
+          path: target/wheels
 
   linux-cross:
     name: Linux ARM Build
@@ -258,7 +260,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist
+          args: --release
       - uses: uraimo/run-on-arch-action@v2.0.5
         name: Install built wheel
         with:
@@ -270,13 +272,13 @@ jobs:
             apt-get install -y --no-install-recommends python3 python3-pip
             pip3 install -U pip
           run: |
-            pip3 install pandas_maxminddb --no-index --find-links dist/ --force-reinstall
+            pip3 install pandas_maxminddb --no-index --find-links target/wheels/ --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: dist
+          path: target/wheels
 
   musllinux:
     name: Linux w/musl Build
@@ -303,7 +305,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: musllinux_1_2
-          args: --release --out dist
+          args: --release
       - name: Install built wheel
         if: matrix.target == 'x86_64-unknown-linux-musl'
         uses: addnab/docker-run-action@v3
@@ -313,13 +315,13 @@ jobs:
           run: |
             apk add py3-pip
             pip3 install -U pip
-            pip3 install pandas_maxminddb --no-index --find-links /io/dist/ --force-reinstall
+            pip3 install pandas_maxminddb --no-index --find-links /io/target/wheels --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: dist
+          path: target/wheels
 
   musllinux-cross:
     name: Linux w/musl ARM Build
@@ -347,7 +349,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           manylinux: musllinux_1_2
-          args: --release --out dist
+          args: --release
       - uses: uraimo/run-on-arch-action@master
         name: Install built wheel
         with:
@@ -358,10 +360,10 @@ jobs:
             apk add py3-pip
             pip3 install -U pip
           run: |
-            pip3 install pandas_maxminddb --no-index --find-links dist/ --force-reinstall
+            pip3 install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: dist
+          path: target/wheels
