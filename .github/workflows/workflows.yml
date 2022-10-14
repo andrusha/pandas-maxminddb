@@ -156,7 +156,7 @@ jobs:
         run: |
           pip download -d target/pip_deps .
           pip install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall
-          python -c "import pandas_maxminddb"
+          python -c "from pandas_maxminddb import open_database"
       - name: Build wheels - universal2
         uses: messense/maturin-action@v1
         with:
@@ -165,7 +165,7 @@ jobs:
         run: |
           pip download -d target/pip_deps .
           pip install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall
-          python -c "import pandas_maxminddb"
+          python -c "from pandas_maxminddb import open_database"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -199,7 +199,7 @@ jobs:
         run: |
           pip download -d target/pip_deps .
           pip install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall
-          python -c "import pandas_maxminddb"
+          python -c "from pandas_maxminddb import open_database"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -235,7 +235,7 @@ jobs:
         run: |
           pip download -d target/pip_deps .
           pip install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall
-          python -c "import pandas_maxminddb"
+          python -c "from pandas_maxminddb import open_database"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -278,7 +278,7 @@ jobs:
           run: |
             pip3 download -d target/pip_deps .
             pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps/ --force-reinstall
-            python3 -c "import pandas_maxminddb"
+            python3 -c "from pandas_maxminddb import open_database"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -322,7 +322,7 @@ jobs:
             pip3 install -U pip
             pip3 download -d target/pip_deps .
             pip3 install pandas_maxminddb --no-index --find-links /io/target/wheels --force-reinstall
-            python3 -c "import pandas_maxminddb"
+            python3 -c "from pandas_maxminddb import open_database"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -368,7 +368,7 @@ jobs:
           run: |
             pip3 download -d target/pip_deps .
             pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall
-            python3 -c "import pandas_maxminddb"
+            python3 -c "from pandas_maxminddb import open_database"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
