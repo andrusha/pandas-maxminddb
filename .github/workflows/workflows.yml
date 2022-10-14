@@ -138,7 +138,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
           architecture: x64
@@ -154,8 +154,8 @@ jobs:
           args: --release --sdist
       - name: Install built wheel - x86_64
         run: |
-          pip install pandas numpy
-          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
+          pip download -d target/pip_deps .
+          pip install pandas_maxminddb --no-index --find-links target/wheels --find-lines target/pip_deps --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Build wheels - universal2
         uses: messense/maturin-action@v1
@@ -163,8 +163,8 @@ jobs:
           args: --release --universal2
       - name: Install built wheel - universal2
         run: |
-          pip install pandas numpy
-          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
+          pip download -d target/pip_deps .
+          pip install pandas_maxminddb --no-index --find-links target/wheels --find-lines target/pip_deps --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -181,7 +181,7 @@ jobs:
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
           architecture: ${{ matrix.target }}
@@ -197,8 +197,8 @@ jobs:
           args: --release
       - name: Install built wheel
         run: |
-          pip install pandas numpy
-          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
+          pip download -d target/pip_deps .
+          pip install pandas_maxminddb --no-index --find-links target/wheels --find-lines target/pip_deps --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -215,7 +215,7 @@ jobs:
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
           architecture: x64
@@ -233,8 +233,8 @@ jobs:
       - name: Install built wheel
         if: matrix.target == 'x86_64'
         run: |
-          pip install pandas numpy
-          pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
+          pip download -d target/pip_deps .
+          pip install pandas_maxminddb --no-index --find-links target/wheels --find-lines target/pip_deps --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -251,7 +251,7 @@ jobs:
         target: [aarch64, armv7]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - uses: actions-rs/toolchain@v1
@@ -276,8 +276,8 @@ jobs:
             apt-get install -y --no-install-recommends python3 python3-pip
             pip3 install -U pip
           run: |
-            pip3 install pandas numpy
-            pip3 install pandas_maxminddb --no-index --find-links target/wheels/ --force-reinstall
+            pip3 download -d target/pip_deps .
+            pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-lines target/pip_deps/ --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -296,7 +296,7 @@ jobs:
           - i686-unknown-linux-musl
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
           architecture: x64
@@ -320,7 +320,7 @@ jobs:
           run: |
             apk add py3-pip
             pip3 install -U pip
-            pip3 install pandas numpy
+            pip3 download -d target/pip_deps .
             pip3 install pandas_maxminddb --no-index --find-links /io/target/wheels --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -342,7 +342,7 @@ jobs:
             arch: armv7
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - uses: actions-rs/toolchain@v1
@@ -366,8 +366,8 @@ jobs:
             apk add py3-pip
             pip3 install -U pip
           run: |
-            pip3 install pandas numpy
-            pip3 install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
+            pip3 download -d target/pip_deps .
+            pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-lines target/pip_deps --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
