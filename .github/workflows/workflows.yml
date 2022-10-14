@@ -154,6 +154,7 @@ jobs:
           args: --release --sdist
       - name: Install built wheel - x86_64
         run: |
+          pip install pandas numpy
           pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Build wheels - universal2
@@ -162,6 +163,7 @@ jobs:
           args: --release --universal2
       - name: Install built wheel - universal2
         run: |
+          pip install pandas numpy
           pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -195,6 +197,7 @@ jobs:
           args: --release
       - name: Install built wheel
         run: |
+          pip install pandas numpy
           pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -230,6 +233,7 @@ jobs:
       - name: Install built wheel
         if: matrix.target == 'x86_64'
         run: |
+          pip install pandas numpy
           pip install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
           python -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -272,6 +276,7 @@ jobs:
             apt-get install -y --no-install-recommends python3 python3-pip
             pip3 install -U pip
           run: |
+            pip3 install pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links target/wheels/ --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -315,6 +320,7 @@ jobs:
           run: |
             apk add py3-pip
             pip3 install -U pip
+            pip3 install pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links /io/target/wheels --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -360,6 +366,7 @@ jobs:
             apk add py3-pip
             pip3 install -U pip
           run: |
+            pip3 install pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links target/wheels --force-reinstall
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
