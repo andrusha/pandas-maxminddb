@@ -236,7 +236,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release
+          args: --release -i 3.8
       - name: Install built wheel
         if: matrix.target == 'x86_64'
         run: |
@@ -276,7 +276,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release
+          args: --release -i 3.8
       - uses: uraimo/run-on-arch-action@v2.0.5
         name: Install built wheel
         with:
@@ -327,7 +327,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: musllinux_1_2
-          args: --release
+          args: --release -i 3.8
       - name: Install built wheel
         if: matrix.target == 'x86_64-unknown-linux-musl'
         uses: addnab/docker-run-action@v3
@@ -377,7 +377,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           manylinux: musllinux_1_2
-          args: --release
+          args: --release -i 3.8
       - uses: uraimo/run-on-arch-action@master
         name: Install built wheel
         with:
