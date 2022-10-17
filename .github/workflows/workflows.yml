@@ -181,6 +181,8 @@ jobs:
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: false
       - uses: actions/setup-python@v4
         with:
           python-version: 3.8
@@ -215,7 +217,10 @@ jobs:
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: false
       - uses: actions/setup-python@v4
+        id: setup_python
         with:
           python-version: 3.8
           architecture: x64
@@ -226,6 +231,8 @@ jobs:
           default: true
       - name: Build wheels
         uses: messense/maturin-action@v1
+        env:
+          PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
         with:
           target: ${{ matrix.target }}
           manylinux: auto
@@ -251,7 +258,10 @@ jobs:
         target: [aarch64, armv7]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: false
       - uses: actions/setup-python@v4
+        id: setup_python
         with:
           python-version: 3.8
       - uses: actions-rs/toolchain@v1
@@ -261,6 +271,8 @@ jobs:
           default: true
       - name: Build wheels
         uses: messense/maturin-action@v1
+        env:
+          PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
         with:
           target: ${{ matrix.target }}
           manylinux: auto
@@ -296,7 +308,10 @@ jobs:
           - i686-unknown-linux-musl
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: false
       - uses: actions/setup-python@v4
+        id: setup_python
         with:
           python-version: 3.8
           architecture: x64
@@ -307,6 +322,8 @@ jobs:
           default: true
       - name: Build wheels
         uses: messense/maturin-action@v1
+        env:
+          PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
         with:
           target: ${{ matrix.target }}
           manylinux: musllinux_1_2
@@ -342,7 +359,10 @@ jobs:
             arch: armv7
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: false
       - uses: actions/setup-python@v4
+        id: setup_python
         with:
           python-version: 3.8
       - uses: actions-rs/toolchain@v1
@@ -352,6 +372,8 @@ jobs:
           default: true
       - name: Build wheels
         uses: messense/maturin-action@v1
+        env:
+          PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
         with:
           target: ${{ matrix.platform.target }}
           manylinux: musllinux_1_2
