@@ -36,6 +36,7 @@ def test_linux_docker(session):
 @nox.session
 def test_wheel_release(session):
     session.install(*dev_deps)
+    session.run_always("rm", "-rf", "target/wheels", external=True)
     session.run_always("maturin", "build", "--release", "--sdist")
     session.run("pip", "download", "-d", "target/pip_deps", ".")
     session.install(

@@ -10,7 +10,8 @@ By importing `pandas_maxminddb` you add Pandas `geo` extension which allows you 
 import pandas as pd
 from pandas_maxminddb import open_database
 
-ips = pd.DataFrame(data={'ip': ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]})
+ips = pd.DataFrame(data={
+    'ip': ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]})
 with open_database('./GeoLite.mmdb/GeoLite2-City.mmdb') as reader:
     ips.geo.geolocate('ip', reader, ['country', 'city', 'state', 'postcode'])
 ips

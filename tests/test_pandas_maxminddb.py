@@ -1,7 +1,6 @@
 import pandas as pd
+import pandas_maxminddb
 import pytest
-
-import pandas_maxminddb  # noqa: F401
 
 GEOLITE_CITY_MMDB = "./GeoLite.mmdb/GeoLite2-City.mmdb"
 

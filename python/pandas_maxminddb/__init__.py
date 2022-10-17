@@ -2,9 +2,9 @@ from contextlib import contextmanager
 
 import pandas as pd
 
-from .pandas_maxminddb import Reader, ReaderMem, ReaderMmap, __all__, __doc__, mmdb_geolocate  # noqa: F401
+from .pandas_maxminddb import Reader, ReaderMem, ReaderMmap, mmdb_geolocate
 
-__all__ = __all__ + ["GeoAccessor"]
+__all__ = ["open_database", "GeoAccessor", "ReaderMem", "ReaderMmap"]
 
 
 @contextmanager
