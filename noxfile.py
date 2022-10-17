@@ -34,6 +34,23 @@ def test_linux_docker(session):
 
 
 @nox.session
+def test_wheel_release(session):
+    session.install(*dev_deps)
+    session.run_always("maturin", "build", "--release", "--sdist")
+    session.run("pip", "download", "-d", "target/pip_deps", ".")
+    session.install(
+        "pandas_maxminddb",
+        "--no-index",
+        "--find-links",
+        "target/wheels",
+        "--find-links",
+        "target/pip_deps",
+        "--force-reinstall",
+    )
+    session.run("python", "-c", "import pandas_maxminddb")
+
+
+@nox.session
 def bench(session):
     session.install(*dev_deps)
     session.install(".")
