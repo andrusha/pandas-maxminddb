@@ -344,8 +344,8 @@ jobs:
           run: |
             apk add py3-pip
             pip3 install -U pip
-            pip3 download --extra-index-url https://alpine-wheels.github.io/index -d target/pip_deps pandas numpy
-            pip3 install pandas_maxminddb --no-index --find-links /io/target/wheels --force-reinstall --only-binary :all:
+            pip3 download --extra-index-url https://alpine-wheels.github.io/index -d /io/target/pip_deps pandas numpy
+            pip3 install pandas_maxminddb --no-index --find-links /io/target/pip_deps --find-links /io/target/wheels --force-reinstall --only-binary :all:
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
