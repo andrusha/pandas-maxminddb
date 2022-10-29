@@ -292,8 +292,9 @@ jobs:
             apt-get update
             apt-get install -y --no-install-recommends python3 python3-pip
             pip3 install -U pip
+          # Use PiWheels for armv7 / raspberrypi
           run: |
-            pip3 download -d target/pip_deps pandas numpy
+            pip3 download --extra-index-url=https://www.piwheels.org/simple -d target/pip_deps pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps/ --force-reinstall --only-binary :all:
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -339,10 +340,11 @@ jobs:
         with:
           image: alpine:latest
           options: -v ${{ github.workspace }}:/io -w /io
+          # Alpine wheels for numpy and pandas
           run: |
             apk add py3-pip
             pip3 install -U pip
-            pip3 download -d target/pip_deps pandas numpy
+            pip3 download --extra-index-url https://alpine-wheels.github.io/index -d target/pip_deps pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links /io/target/wheels --force-reinstall --only-binary :all:
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -392,8 +394,9 @@ jobs:
           install: |
             apk add py3-pip
             pip3 install -U pip
+          # Alpine wheels for numpy and pandas
           run: |
-            pip3 download -d target/pip_deps pandas numpy
+            pip3 download --extra-index-url https://alpine-wheels.github.io/index -d target/pip_deps pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall --only-binary :all:
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
