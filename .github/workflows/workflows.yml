@@ -293,7 +293,7 @@ jobs:
           githubToken: ${{ github.token }}
           install: |
             apt-get update
-            apt-get install -y --no-install-recommends python${{ matrix.platform.py }}-full
+            apt-get install -y --no-install-recommends python${{ matrix.platform.py }}-full python3-pip
           # Use PiWheels for armv7 / raspberrypi
           run: |
             python${{ matrix.platform.py }} -m pip download --extra-index-url=https://www.piwheels.org/simple --only-binary :all: -d target/pip_deps pandas numpy
@@ -334,7 +334,9 @@ jobs:
       - name: Install built wheel
         uses: addnab/docker-run-action@v3
         with:
-          image: alpine:latest
+          # https://pkgs.alpinelinux.org/packages?name=python3&branch=v3.9&repo=&arch=&maintainer=
+          # 3.8 is on 3.8 alpine
+          image: alpine:3.8
           options: -v ${{ github.workspace }}:/io -w /io
           # Alpine wheels for numpy and pandas
           run: |
