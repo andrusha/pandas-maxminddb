@@ -293,13 +293,12 @@ jobs:
           githubToken: ${{ github.token }}
           install: |
             apt-get update
-            apt-get install -y --no-install-recommends python3 python3-pip
-            pip3 install -U pip
+            apt-get install -y --no-install-recommends python${{ matrix.platform.py }}-full
           # Use PiWheels for armv7 / raspberrypi
           run: |
-            pip3 download --extra-index-url=https://www.piwheels.org/simple --only-binary :all: -d target/pip_deps pandas numpy
-            pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps/ --force-reinstall --only-binary :all:
-            python3 -c "import pandas_maxminddb"
+            python${{ matrix.platform.py }} -m pip download --extra-index-url=https://www.piwheels.org/simple --only-binary :all: -d target/pip_deps pandas numpy
+            python${{ matrix.platform.py }} -m pip install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps/ --force-reinstall --only-binary :all:
+            python${{ matrix.platform.py }} -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:

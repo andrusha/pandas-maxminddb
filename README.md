@@ -12,7 +12,7 @@ The wheels are built against following `numpy` and `pandas` distributions:
 - If you use ARMv7 (RaspberryPi and such) use [PiWheels](https://www.piwheels.org) `--extra-index-url=https://www.piwheels.org/simple`.
 - If you use [musl](https://en.wikipedia.org/wiki/Musl)-based distro like Alpine use [Alpine-wheels](https://alpine-wheels.github.io) `--extra-index-url https://alpine-wheels.github.io/index`.
 
-Refer to the [build workflow](./.github/workflows/workflows.yml) for details. Following platforms are currently supported:
+Refer to the [build workflow](./.github/workflows/workflows.yml) for details. Following currently have pre-built wheels:
 
 | Py   | win x86 | win x64 | macOS x86_64 | macOS AArch64 | linux x86_64 | linux i686 | linux AArch64 | linux ARMv7 | musl linux x86_64 |
 |------|---------|---------|--------------|---------------|--------------|------------|---------------|-------------|-------------------|
