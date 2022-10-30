@@ -260,7 +260,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [aarch64, armv7]
+        platform: [
+          { target: "aarch64", py: "3.8" },
+          { target: "armv7", py: "3.9" },
+        ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -268,7 +271,7 @@ jobs:
       - uses: actions/setup-python@v4
         id: setup_python
         with:
-          python-version: 3.8
+          python-version: ${{ matrix.platform.py }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -279,13 +282,13 @@ jobs:
         env:
           PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
         with:
-          target: ${{ matrix.target }}
+          target: ${{ matrix.platform.target }}
           manylinux: auto
-          args: --release -i 3.8
+          args: --release -i ${{ matrix.platform.py }}
       - uses: uraimo/run-on-arch-action@v2.0.5
         name: Install built wheel
         with:
-          arch: ${{ matrix.target }}
+          arch: ${{ matrix.platform.target }}
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           install: |
@@ -294,7 +297,7 @@ jobs:
             pip3 install -U pip
           # Use PiWheels for armv7 / raspberrypi
           run: |
-            pip3 download --extra-index-url=https://www.piwheels.org/simple -d target/pip_deps pandas numpy
+            pip3 download --extra-index-url=https://www.piwheels.org/simple --only-binary :all: -d target/pip_deps pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps/ --force-reinstall --only-binary :all:
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
@@ -307,11 +310,6 @@ jobs:
     name: Linux w/musl Build
     needs: [test_python, test_rust]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          - x86_64-unknown-linux-musl
-          - i686-unknown-linux-musl
     steps:
       - uses: actions/checkout@v2
         with:
@@ -331,11 +329,10 @@ jobs:
         env:
           PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
         with:
-          target: ${{ matrix.target }}
+          target: x86_64-unknown-linux-musl
           manylinux: musllinux_1_2
           args: --release -i 3.8
       - name: Install built wheel
-        if: matrix.target == 'x86_64-unknown-linux-musl'
         uses: addnab/docker-run-action@v3
         with:
           image: alpine:latest
@@ -344,60 +341,8 @@ jobs:
           run: |
             apk add py3-pip
             pip3 install -U pip
-            pip3 download --extra-index-url https://alpine-wheels.github.io/index -d /io/target/pip_deps pandas numpy
+            pip3 download --extra-index-url https://alpine-wheels.github.io/index --only-binary :all: -d /io/target/pip_deps pandas numpy
             pip3 install pandas_maxminddb --no-index --find-links /io/target/pip_deps --find-links /io/target/wheels --force-reinstall --only-binary :all:
-            python3 -c "import pandas_maxminddb"
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: target/wheels
-
-  musllinux-cross:
-    name: Linux w/musl ARM Build
-    needs: [test_python, test_rust]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - target: aarch64-unknown-linux-musl
-            arch: aarch64
-          - target: armv7-unknown-linux-musleabihf
-            arch: armv7
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: false
-      - uses: actions/setup-python@v4
-        id: setup_python
-        with:
-          python-version: 3.8
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          default: true
-      - name: Build wheels
-        uses: messense/maturin-action@v1
-        env:
-          PYO3_PYTHON: ${{ steps.setup_python.outputs.python-path }}
-        with:
-          target: ${{ matrix.platform.target }}
-          manylinux: musllinux_1_2
-          args: --release -i 3.8
-      - uses: uraimo/run-on-arch-action@master
-        name: Install built wheel
-        with:
-          arch: ${{ matrix.platform.arch }}
-          distro: alpine_latest
-          githubToken: ${{ github.token }}
-          install: |
-            apk add py3-pip
-            pip3 install -U pip
-          # Alpine wheels for numpy and pandas
-          run: |
-            pip3 download --extra-index-url https://alpine-wheels.github.io/index -d target/pip_deps pandas numpy
-            pip3 install pandas_maxminddb --no-index --find-links target/wheels --find-links target/pip_deps --force-reinstall --only-binary :all:
             python3 -c "import pandas_maxminddb"
       - name: Upload wheels
         uses: actions/upload-artifact@v2
