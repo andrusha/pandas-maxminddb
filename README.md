@@ -2,6 +2,24 @@
 
 Provides fast and convenient geolocation bindings for [Pandas](https://pandas.pydata.org/) Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up compared to naively applying function per column. Based on the [maxminddb-rust](https://github.com/oschwald/maxminddb-rust).  
 
+## Installation
+
+1. The preferred way is to use precompiled binary wheel, as this requires no toolchain and is fastest.
+2. If you want to build from source any platform [Rust has target](https://doc.rust-lang.org/beta/rustc/platform-support.html) for is supported.
+
+The wheels are built against following `numpy` and `pandas` distributions:
+- If you're on Windows / macOS / Linux there is no need to do anything extra.
+- If you use ARMv7 (RaspberryPi and such) use [PiWheels](https://www.piwheels.org) `--extra-index-url=https://www.piwheels.org/simple`.
+- If you use [musl](https://en.wikipedia.org/wiki/Musl)-based distro like Alpine use [Alpine-wheels](https://alpine-wheels.github.io) `--extra-index-url https://alpine-wheels.github.io/index`.
+
+Refer to the [build workflow](./.github/workflows/workflows.yml) for details. Following platforms are currently supported:
+
+| Py   | win x86 | win x64 | macOS x86_64 | macOS AArch64 | linux x86_64 | linux i686 | linux AArch64 | linux ARMv7 | musl linux x86_64 |
+|------|---------|---------|--------------|---------------|--------------|------------|---------------|-------------|-------------------|
+| 3.8  | ✅       | ✅       | ✅            | ✅             | ✅            | ✅          | ✅             | 🚫          | 🚫                |
+| 3.9  | ✅       | ✅       | ✅            | ✅             | ✅            | ✅          | ✅             | ✅           | ✅                 |
+| 3.10 | ✅       | ✅       | ✅            | ✅             | ✅            | ✅          | ✅             | 🚫          | ✅                 |
+
 ## Usage
 
 By importing `pandas_maxminddb` you add Pandas `geo` extension which allows you to add columns in-place
