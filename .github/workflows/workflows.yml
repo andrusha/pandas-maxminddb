@@ -291,9 +291,10 @@ jobs:
           arch: ${{ matrix.platform.target }}
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
+          # libatlas-base-dev required by numpy
           install: |
             apt-get update
-            apt-get install -y --no-install-recommends python${{ matrix.platform.py }}-full python3-pip libatlas-base-dev libjasper-dev
+            apt-get install -y --no-install-recommends python${{ matrix.platform.py }}-full python3-pip libatlas-base-dev
           # Use PiWheels for armv7 / raspberrypi
           run: |
             python${{ matrix.platform.py }} -m pip download --extra-index-url=https://www.piwheels.org/simple --only-binary :all: -d target/pip_deps pandas numpy
@@ -339,8 +340,9 @@ jobs:
           image: alpine:3.13
           options: -v ${{ github.workspace }}:/io -w /io
           # Alpine wheels for numpy and pandas
+          # libstdc++ required for pandas
           run: |
-            apk add py3-pip
+            apk add py3-pip libstdc++
             pip3 install -U pip
             pip3 download --extra-index-url https://alpine-wheels.github.io/index --only-binary :all: -d /io/target/pip_deps pandas numpy
             pip3 install pandas_maxminddb --no-index --ignore-installed --find-links /io/target/pip_deps --find-links /io/target/wheels --force-reinstall --only-binary :all:
