@@ -195,7 +195,6 @@ jobs:
       matrix:
         platform: [
           { target: "alpine:3.13", py: "3.8" },
-          { target: "alpine:3.15", py: "3.9" },
           { target: "alpine:3.16", py: "3.10" },
         ]
     steps:
