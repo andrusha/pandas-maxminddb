@@ -1,18 +1,33 @@
 # Pandas Maxmind
 
-Provides fast and convenient geolocation bindings for [Pandas](https://pandas.pydata.org/) Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up compared to naively applying function per column. Based on the [maxminddb-rust](https://github.com/oschwald/maxminddb-rust).  
+Provides fast and convenient geolocation bindings for [Pandas](https://pandas.pydata.org/)
+Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up compared to naively
+applying function per column. Based on
+the [maxminddb-rust](https://github.com/oschwald/maxminddb-rust).
 
 ## Installation
 
-1. The preferred way is to use precompiled binary wheel, as this requires no toolchain and is fastest.
-2. If you want to build from source any platform [Rust has target](https://doc.rust-lang.org/beta/rustc/platform-support.html) for is supported.
+1. Minimal supported Python is 3.8
+2. `pip install pandas_maxminddb`
+3. The preferred way is to use precompiled binary wheel, as this requires no toolchain and is
+   fastest.
+4. If you want to build from source any
+   platform [Rust has target](https://doc.rust-lang.org/beta/rustc/platform-support.html) for is
+   supported.
+
+### Pre-build wheels
 
 The wheels are built against following `numpy` and `pandas` distributions:
-- If you're on Windows / macOS / Linux there is no need to do anything extra.
-- If you use ARMv7 (RaspberryPi and such) use [PiWheels](https://www.piwheels.org) `--extra-index-url=https://www.piwheels.org/simple`.
-- If you use [musl](https://en.wikipedia.org/wiki/Musl)-based distro like Alpine use [Alpine-wheels](https://alpine-wheels.github.io) `--extra-index-url https://alpine-wheels.github.io/index`.
 
-Refer to the [build workflow](./.github/workflows/workflows.yml) for details. Following currently have pre-built wheels:
+- If you're on Windows / macOS / Linux there is no need to do anything extra.
+- If you use ARMv7 (RaspberryPi and such)
+  use [PiWheels](https://www.piwheels.org) `--extra-index-url=https://www.piwheels.org/simple`,
+  install `libatlas-base-dev` for numpy.
+- If you use [musl](https://en.wikipedia.org/wiki/Musl)-based distro like Alpine
+  use [Alpine-wheels](https://alpine-wheels.github.io) `--extra-index-url https://alpine-wheels.github.io/index`
+  , install `libstdc++` for pandas.
+
+Refer to the [build workflow](./.github/workflows/ci.yml) for details.
 
 | Py   | win x86 | win x64 | macOS x86_64 | macOS AArch64 | linux x86_64 | linux i686 | linux AArch64 | linux ARMv7 | musl linux x86_64 |
 |------|---------|---------|--------------|---------------|--------------|------------|---------------|-------------|-------------------|
@@ -22,7 +37,8 @@ Refer to the [build workflow](./.github/workflows/workflows.yml) for details. Fo
 
 ## Usage
 
-By importing `pandas_maxminddb` you add Pandas `geo` extension which allows you to add columns in-place
+By importing `pandas_maxminddb` you add Pandas `geo` extension which allows you to add columns
+in-place
 
 ```python
 import pandas as pd
@@ -44,6 +60,7 @@ ips
 | 4   |2.30.253.245   |London     |SW15    |ENG  |GB     |
 
 ## Benchmarks
+
 |Name (time in ms)                                                                                                                                                                                                 |Min       |Max    |Mean      |StdDev |Median    |IQR    |Outliers|OPS    |Rounds    |Iterations|
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-------|----------|-------|----------|-------|--------|-------|----------|----------|
 |test_benchmark_pandas_maxminddb                                                                                                                                                                                   |273.2588 (1.0)|284.8850 (1.0)|280.4760 (1.0)|4.5448 (1.0)|281.6831 (1.0)|5.9721 (1.0)|1;0     |3.5654 (1.0)|5         |1         |
@@ -52,21 +69,17 @@ ips
 
 ## Extending
 
-Due to Dataframe columns being flat arrays and geolocation data coming in a hierarchical format you might need to provide more mappings to serve your particular use-case. In order to do that follow Development section to setup your environment and then:
+Due to Dataframe columns being flat arrays and geolocation data coming in a hierarchical format you
+might need to provide more mappings to serve your particular use-case. In order to do that follow
+Development section to setup your environment and then:
 
 1. Add column name to the [geo_column.rs](./src/geo_column.rs)
 2. Add column mapping to the [geolocate.rs](./src/geolocate.rs)
 
-## Todo
-- [ ] Add type annotations https://maturin.rs/project_layout.html
-- [ ] Distribute for multiple python versions https://pyo3.rs/v0.17.1/building_and_distribution.html
-- [ ] Figure out GIL https://pyo3.rs/v0.17.1/types.html
-- [ ] Add multi-threading support
-- [ ] Add documentation and publish it
-
 ## Development
 
 ### Setting up environment
+
 - `git clone --recurse-submodules git@github.com:andrusha/pandas-maxminddb.git`
 - `PYTHON_CONFIGURE_OPTS="--enable-shared" asdf install`
 - `PYTHON_CONFIGURE_OPTS="--enable-shared" python -m venv .venv`
@@ -76,8 +89,13 @@ Due to Dataframe columns being flat arrays and geolocation data coming in a hier
 - `PYTHONPATH=.venv/lib/python3.8/site-packages cargo test --no-default-features`
 
 ### libmaxminddb
-In order to run `nox -s bench` properly you would need [libmaxminddb](https://github.com/maxmind/libmaxminddb) installed as per [maxminddb](https://maxminddb.readthedocs.io/en/latest/index.html) instructions prior to installing Python package, so that C-extension could be benchmarked properly.
+
+In order to run `nox -s bench` properly you would
+need [libmaxminddb](https://github.com/maxmind/libmaxminddb) installed as
+per [maxminddb](https://maxminddb.readthedocs.io/en/latest/index.html) instructions prior to
+installing Python package, so that C-extension could be benchmarked properly.
 
 On macOS this would require following:
+
 - `brew instal libmaxminddb`
 - `PATH="/opt/homebrew/Cellar/libmaxminddb/1.7.1/bin:$PATH" LDFLAGS="-L/opt/homebrew/Cellar/libmaxminddb/1.7.1/lib" CPPFLAGS="-I/opt/homebrew/Cellar/libmaxminddb/1.7.1/include" pip install maxminddb --force-reinstall --verbose --no-cache-dir`

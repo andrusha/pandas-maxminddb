@@ -1,0 +1,131 @@
+name: CI
+on: push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  ### Style
+
+  lint_python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: pip
+          cache-dependency-path: noxfile.py
+      - run: pip install nox
+      - run: nox -s lint
+
+  lint_rust:
+    name: Lint Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt, clippy
+          default: true
+      - uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+      - run: cargo clippy
+
+  ### Tests
+
+  test_python:
+    name: Test Python
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [ '3.8', '3.9', '3.10' ]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            noxfile.py
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          default: true
+      - uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+      - run: pip install nox
+      - name: Run tests
+        env:
+          PY_VERSION: ${{ matrix.python_version }}
+        run: |
+          echo "version=$PY_VERSION" > $(pwd)/pyo3.conf
+          PYO3_CONFIG_FILE=$(pwd)/pyo3.conf nox -s test
+
+  test_rust:
+    name: Test Rust
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [ '3.8', '3.9', '3.10' ]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          default: true
+      - uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+      - run: pip install .
+      - run: cargo test --no-default-features
+
+  benchmark:
+    name: Benchmark
+    needs: [ test_python, test_rust ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          default: true
+      - uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+      - name: Install libmaxminddb
+        run: |
+          sudo add-apt-repository ppa:maxmind/ppa
+          sudo apt update
+          sudo apt install libmaxminddb0 libmaxminddb-dev mmdb-bin
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache-dependency-path: |
+            pyproject.toml
+            noxfile.py
+      # Needed in order to pick up the C extension properly
+      - name: Force reinstall maxminddb
+        run: pip install maxminddb --force-reinstall --verbose --no-cache-dir
+      - run: pip install nox
+      - name: Bench
+        run: |
+          echo "version=3.8" > $(pwd)/pyo3.conf
+          PYO3_CONFIG_FILE=$(pwd)/pyo3.conf nox -s test
