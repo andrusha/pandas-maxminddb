@@ -58,16 +58,21 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        target: [ x64, x86 ]
-        py: [ '3.8', '3.9', '3.10' ]
+        platform: [
+          { target: x64, py: '3.8' },
+          { target: x64, py: '3.9' },
+          { target: x64, py: '3.10' },
+          { target: x86, py: '3.8' },
+          { target: x86, py: '3.9' },
+        ]
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: false
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.py }}
-          architecture: ${{ matrix.target }}
+          python-version: ${{ matrix.platform.py }}
+          architecture: ${{ matrix.platform.target }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -76,7 +81,7 @@ jobs:
       - name: Build wheels
         uses: messense/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
+          target: ${{ matrix.platform.target }}
           args: --release
       - name: Install built wheel
         run: |
@@ -138,7 +143,6 @@ jobs:
         platform: [
           { target: "aarch64", py: "3.8" },
           { target: "aarch64", py: "3.9" },
-          { target: "aarch64", py: "3.10" },
           { target: "armv7", py: "3.9" },
         ]
     steps:
@@ -191,7 +195,7 @@ jobs:
       matrix:
         platform: [
           { target: "alpine:3.13", py: "3.8" },
-          { target: "alpine:3.14", py: "3.9" },
+          { target: "alpine:3.15", py: "3.9" },
           { target: "alpine:3.16", py: "3.10" },
         ]
     steps:
