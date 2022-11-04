@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::sync::Arc;
 
 use maxminddb::{MaxMindDBError, Mmap, Reader};
 use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
@@ -8,11 +10,13 @@ use pyo3::{pymodule, types::PyModule, PyObject, PyResult, Python};
 use geo_column::GeoColumn;
 
 use crate::errors::PandasMaxmindError;
+use crate::lookup_result::LookupResult;
 use crate::PandasMaxmindError::UnsupportedReaderError;
 
 mod errors;
 mod geo_column;
 mod geolocate;
+mod lookup_result;
 
 #[pyclass(subclass, name = "Reader")]
 struct PyReader;
@@ -52,6 +56,24 @@ impl PyReaderMmap {
     }
 }
 
+fn result_into_py<'py, 'r>(
+    py: Python<'py>,
+    mut temp: HashMap<GeoColumn, Vec<LookupResult<'r>>>,
+) -> HashMap<GeoColumn, &'py PyArray1<PyObject>> {
+    let mut res = HashMap::with_capacity(temp.len());
+    for (k, v) in temp.drain() {
+        res.insert(
+            k,
+            v.into_iter()
+                .map(|v| v.to_object(py))
+                .collect::<Vec<PyObject>>()
+                .into_pyarray(py),
+        );
+    }
+
+    res
+}
+
 #[pyfunction]
 fn mmdb_geolocate<'py>(
     py: Python<'py>,
@@ -59,21 +81,28 @@ fn mmdb_geolocate<'py>(
     reader: PyObject,
     columns: Vec<GeoColumn>,
 ) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
-    let mut temp = match (
+    let ips: Vec<String> = ips.as_array().iter().map(|i| i.to_string()).collect();
+
+    match (
         reader.extract::<PyRef<PyReaderMem>>(py),
         reader.extract::<PyRef<PyReaderMmap>>(py),
     ) {
-        (Ok(r), _) => geolocate::geolocate(py, ips, &r.reader, columns),
-        (_, Ok(r)) => geolocate::geolocate(py, ips, &r.reader, columns),
-        (_, _) => Err(UnsupportedReaderError),
-    }?;
-
-    let mut res = HashMap::with_capacity(temp.len());
-    for (k, v) in temp.drain() {
-        res.insert(k, v.into_pyarray(py));
+        (Ok(r), _) => {
+            let reader = &r.reader;
+            Ok(result_into_py(
+                py,
+                geolocate::geolocate(&ips, reader, columns)?,
+            ))
+        }
+        (_, Ok(r)) => {
+            let reader = &r.reader;
+            Ok(result_into_py(
+                py,
+                geolocate::geolocate(&ips, reader, columns)?,
+            ))
+        }
+        (_, _) => Err(UnsupportedReaderError)?,
     }
-
-    Ok(res)
 }
 
 #[pymodule]
