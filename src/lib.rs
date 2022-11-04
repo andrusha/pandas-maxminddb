@@ -79,6 +79,7 @@ fn mmdb_geolocate<'py>(
     reader: PyObject,
     columns: Vec<GeoColumn>,
     parallel: bool,
+    parallel_chunk_size: usize,
 ) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
     let ips: Vec<String> = ips.as_array().iter().map(|i| i.to_string()).collect();
 
@@ -89,7 +90,7 @@ fn mmdb_geolocate<'py>(
         (Ok(r), _) => {
             let reader = &r.reader;
             let temp = if parallel {
-                geolocate::geolocate_par(&ips, reader, &columns)?
+                geolocate::geolocate_par(&ips, reader, &columns, parallel_chunk_size)?
             } else {
                 geolocate::geolocate(&ips, reader, &columns)?
             };
