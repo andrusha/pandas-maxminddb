@@ -96,7 +96,7 @@ def test_benchmark_pandas_parallel_mem_maxminddb(benchmark, random_ips):
             "ip",
             reader,
             ["country", "city", "state", "postcode", "latitude", "longitude", "accuracy_radius"],
-            True
+            True,
         )
 
 
