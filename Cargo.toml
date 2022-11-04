@@ -13,6 +13,7 @@ pyo3 = "0.17.1"
 numpy = "0.17.2"
 maxminddb = { version = "0.23.0", features = ["mmap"] }
 thiserror = "1.0.36"
+rayon = "1.5.3"
 
 [build-dependencies]
 pyo3-build-config = "0.17.1"

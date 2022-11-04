@@ -1,8 +1,10 @@
 use crate::lookup_result::LookupResult;
 use crate::{GeoColumn, PandasMaxmindError};
 use maxminddb::{geoip2, Reader};
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::net::IpAddr;
+use std::sync::Arc;
 
 // Treats missing lookup as non-critical error
 // in order to short-circuit execution down the line
@@ -52,10 +54,35 @@ mod test_lookup_ip {
     }
 }
 
-pub fn geolocate<'py, 'r, T: AsRef<[u8]>>(
+pub fn geolocate_par<'r>(
+    ips: &[String],
+    reader: &'r Reader<Vec<u8>>,
+    columns: &[GeoColumn],
+) -> Result<HashMap<GeoColumn, Vec<LookupResult<'r>>>, PandasMaxmindError> {
+    let reader_arc = Arc::new(reader);
+    let chunks: Vec<Result<HashMap<GeoColumn, Vec<LookupResult<'r>>>, PandasMaxmindError>> = ips
+        .par_chunks(1024)
+        .map(|chunk| geolocate(chunk, &reader_arc, columns))
+        .collect();
+
+    let mut res = HashMap::with_capacity(columns.len());
+    for &c in columns.iter() {
+        res.insert(c, Vec::with_capacity(ips.len()));
+    }
+
+    for chunk in chunks {
+        for (k, v) in chunk?.iter_mut() {
+            res.get_mut(k).unwrap().append(v);
+        }
+    }
+
+    Ok(res)
+}
+
+pub fn geolocate<'r, T: AsRef<[u8]>>(
     ips: &[String],
     reader: &'r Reader<T>,
-    columns: Vec<GeoColumn>,
+    columns: &[GeoColumn],
 ) -> Result<HashMap<GeoColumn, Vec<LookupResult<'r>>>, PandasMaxmindError> {
     let mut res = HashMap::with_capacity(columns.len());
     for &c in columns.iter() {

@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::rc::Rc;
-use std::sync::Arc;
 
 use maxminddb::{MaxMindDBError, Mmap, Reader};
 use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
@@ -11,7 +9,7 @@ use geo_column::GeoColumn;
 
 use crate::errors::PandasMaxmindError;
 use crate::lookup_result::LookupResult;
-use crate::PandasMaxmindError::UnsupportedReaderError;
+use crate::PandasMaxmindError::{ParallelMmapReaderError, UnsupportedReaderError};
 
 mod errors;
 mod geo_column;
@@ -80,6 +78,7 @@ fn mmdb_geolocate<'py>(
     ips: PyReadonlyArray1<PyObject>,
     reader: PyObject,
     columns: Vec<GeoColumn>,
+    parallel: bool,
 ) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
     let ips: Vec<String> = ips.as_array().iter().map(|i| i.to_string()).collect();
 
@@ -89,17 +88,24 @@ fn mmdb_geolocate<'py>(
     ) {
         (Ok(r), _) => {
             let reader = &r.reader;
-            Ok(result_into_py(
-                py,
-                geolocate::geolocate(&ips, reader, columns)?,
-            ))
+            let temp = if parallel {
+                geolocate::geolocate_par(&ips, reader, &columns)?
+            } else {
+                geolocate::geolocate(&ips, reader, &columns)?
+            };
+
+            Ok(result_into_py(py, temp))
         }
         (_, Ok(r)) => {
             let reader = &r.reader;
-            Ok(result_into_py(
-                py,
-                geolocate::geolocate(&ips, reader, columns)?,
-            ))
+            if parallel {
+                Err(ParallelMmapReaderError)?
+            } else {
+                Ok(result_into_py(
+                    py,
+                    geolocate::geolocate(&ips, reader, &columns)?,
+                ))
+            }
         }
         (_, _) => Err(UnsupportedReaderError)?,
     }

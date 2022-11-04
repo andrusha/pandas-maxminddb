@@ -88,6 +88,18 @@ def test_benchmark_pandas_mem_maxminddb(benchmark, random_ips):
         )
 
 
+def test_benchmark_pandas_parallel_mem_maxminddb(benchmark, random_ips):
+    ips = pd.DataFrame(data={"ip": random_ips})
+    with pandas_maxminddb.open_database(GEOLITE_CITY_MMDB) as reader:
+        benchmark(
+            ips.geo.geolocate,
+            "ip",
+            reader,
+            ["country", "city", "state", "postcode", "latitude", "longitude", "accuracy_radius"],
+            True
+        )
+
+
 def test_benchmark_pandas_mmap_maxminddb(benchmark, random_ips):
     ips = pd.DataFrame(data={"ip": random_ips})
     with pandas_maxminddb.open_database(GEOLITE_CITY_MMDB, mmap=True) as reader:

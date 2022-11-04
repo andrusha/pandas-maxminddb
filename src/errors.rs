@@ -12,6 +12,9 @@ pub enum PandasMaxmindError {
 
     #[error("unsupported reader class")]
     UnsupportedReaderError,
+
+    #[error("mmap is not supported for parallel processing")]
+    ParallelMmapReaderError,
 }
 
 impl From<PandasMaxmindError> for PyErr {
@@ -22,6 +25,7 @@ impl From<PandasMaxmindError> for PyErr {
             MaxMindDBError(_) => PyRuntimeError::new_err(e.to_string()),
             UnsupportedReaderError => PyTypeError::new_err(e.to_string()),
             ParseColumnError(_) => PyKeyError::new_err(e.to_string()),
+            ParallelMmapReaderError => PyRuntimeError::new_err(e.to_string()),
         }
     }
 }
