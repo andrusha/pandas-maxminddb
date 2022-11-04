@@ -4,22 +4,26 @@ build-backend = "maturin"
 
 [project]
 name = "pandas-maxminddb"
-version = "0.1.1"
-description = "numpy maxminddb python bindings"
+version = "0.2.0"
+description = "Fast geolocation library for Pandas Dataframes, built on Numpy C-FFI"
 requires-python = ">=3.8"
-license = {text = "Apache-2.0"}
+license = {text = "MIT"}
 dependencies = [
     "pandas",
     "numpy"
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: GIS",
     "Programming Language :: Python",
     "Programming Language :: Rust",
     "Operating System :: POSIX",
     "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux"
 ]
 
 [tool.maturin]

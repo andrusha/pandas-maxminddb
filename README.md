@@ -21,7 +21,7 @@ the [maxminddb-rust](https://github.com/oschwald/maxminddb-rust).
    platform [Rust has target](https://doc.rust-lang.org/beta/rustc/platform-support.html) for is
    supported.
 
-### Pre-build wheels
+### Pre-built wheels
 
 The wheels are built against following `numpy` and `pandas` distributions:
 
