@@ -58,10 +58,11 @@ pub fn geolocate_par<'r>(
     ips: &[String],
     reader: &'r Reader<Vec<u8>>,
     columns: &[GeoColumn],
+    chunk_size: usize,
 ) -> Result<HashMap<GeoColumn, Vec<LookupResult<'r>>>, PandasMaxmindError> {
     let reader_arc = Arc::new(reader);
     let chunks: Vec<Result<HashMap<GeoColumn, Vec<LookupResult<'r>>>, PandasMaxmindError>> = ips
-        .par_chunks(1024)
+        .par_chunks(chunk_size)
         .map(|chunk| geolocate(chunk, &reader_arc, columns))
         .collect();
 
