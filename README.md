@@ -5,6 +5,12 @@ Dataframes. Uses [numpy](https://numpy.org/) ndarray's internally to speed it up
 applying function per column. Based on
 the [maxminddb-rust](https://github.com/oschwald/maxminddb-rust).
 
+## Features
+
+- Supports both [MMAP](https://en.wikipedia.org/wiki/Memory_mapping) and in-memory implementations
+- Supports parallelism (useful for very big datasets)
+- Comes with pre-built wheels, no need to install and maintain external C-library to get (better than) C-performance
+
 ## Installation
 
 1. Minimal supported Python is 3.8
@@ -38,7 +44,7 @@ Refer to the [build workflow](./.github/workflows/ci.yml) for details.
 ## Usage
 
 By importing `pandas_maxminddb` you add Pandas `geo` extension which allows you to add columns
-in-place
+in-place. This example uses context manager for reader lifetime:
 
 ```python
 import pandas as pd
@@ -59,13 +65,47 @@ ips
 | 3   | 128.119.189.49  | Northampton | 01060    | MA    | US      |
 | 4   | 2.30.253.245    | London      | SW15     | ENG   | GB      |
 
+### Without context manager
+
+You can also instantiate reader yourself, eg:
+
+```python
+import pandas as pd
+from pandas_maxminddb import ReaderMem, ReaderMmap
+
+reader = ReaderMem('./GeoLite.mmdb/GeoLite2-City.mmdb')
+ips = pd.DataFrame(data={
+    'ip': ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]})
+ips.geo.geolocate('ip', reader, ['country', 'city', 'state', 'postcode'])
+ips
+```
+
+### Parallelism
+
+If dataset is big enough, and you have extra cores you might benefit from using them. Currently only `ReaderMem` is supported:
+
+```python
+import pandas as pd
+from pandas_maxminddb import ReaderMem
+
+reader = ReaderMem('./GeoLite.mmdb/GeoLite2-City.mmdb')
+ips = pd.DataFrame(data={
+    'ip': ["75.63.106.74", "132.206.246.203", "94.226.237.31", "128.119.189.49", "2.30.253.245"]})
+ips.geo.geolocate('ip', reader, ['country', 'city', 'state', 'postcode'], parallel=True)
+ips
+```
+
 ## Benchmarks
 
-| Name (time in ms)               | Min                | Max                | Mean               | StdDev           | Median             | IQR              | Outliers | OPS           | Rounds | Iterations |
-|---------------------------------|--------------------|--------------------|--------------------|------------------|--------------------|------------------|----------|---------------|--------|------------|
-| test_benchmark_pandas_maxminddb | 273.2588 (1.0)     | 284.8850 (1.0)     | 280.4760 (1.0)     | 4.5448 (1.0)     | 281.6831 (1.0)     | 5.9721 (1.0)     | 1;0      | 3.5654 (1.0)  | 5      | 1          |
-| test_benchmark_c_maxminddb      | 986.0314 (3.61)    | 1,002.4413 (3.52)  | 995.7461 (3.55)    | 8.3891 (1.85)    | 1,001.3420 (3.55)  | 15.1085 (2.53)   | 2;0      | 1.0043 (0.28) | 5      | 1          |
-| test_benchmark_python_maxminddb | 9,011.4650 (32.98) | 9,286.9635 (32.60) | 9,081.2087 (32.38) | 117.9029 (25.94) | 9,020.5363 (32.02) | 114.9376 (19.25) | 1;0      | 0.1101 (0.03) | 5      | 1          |
+- Tested on M1 Max with 1024 chunk size on 100k dataset, refer to [benchmark](./tests/test_pandas_maxminddb.py)
+
+|Name (time in ms)                                                                                                                                                                                                             |Min                |Max                |Mean               |StdDev         |Median             |IQR            |Outliers|OPS          |Rounds|Iterations|
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|-------------------|-------------------|---------------|-------------------|---------------|--------|-------------|------|----------|
+|test_benchmark_pandas_parallel_mem_maxminddb                                                                                                                                                                                  |52.7588 (1.0)      |57.4206 (1.0)      |54.0573 (1.0)      |1.1782 (1.15)  |53.8497 (1.0)      |1.4194 (1.09)  |4;1     |18.4989 (1.0)|20    |1         |
+|test_benchmark_pandas_mmap_maxminddb                                                                                                                                                                                          |240.0050 (4.55)    |244.3257 (4.26)    |242.2177 (4.48)    |1.9017 (1.85)  |243.1021 (4.51)    |3.2122 (2.46)  |2;0     |4.1285 (0.22)|5     |1         |
+|test_benchmark_pandas_mem_maxminddb                                                                                                                                                                                           |241.4630 (4.58)    |244.2553 (4.25)    |242.8391 (4.49)    |1.0288 (1.0)   |242.7672 (4.51)    |1.3064 (1.0)   |2;0     |4.1180 (0.22)|5     |1         |
+|test_benchmark_c_maxminddb                                                                                                                                                                                                    |1,010.6569 (19.16) |1,055.1080 (18.38) |1,021.3691 (18.89) |18.9273 (18.40)|1,013.3819 (18.82) |12.9544 (9.92) |1;1     |0.9791 (0.05)|5     |1         |
+|test_benchmark_python_maxminddb                                                                                                                                                                                               |9,021.2686 (170.99)|9,188.7629 (160.03)|9,071.0055 (167.80)|70.0512 (68.09)|9,039.7811 (167.87)|84.7766 (64.89)|1;0     |0.1102 (0.01)|5     |1         |
 
 ## Extending
 
