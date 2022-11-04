@@ -10,8 +10,8 @@ pub enum PandasMaxmindError {
     #[error("invalid geo column name: {0}")]
     ParseColumnError(String),
 
-    #[error("unsupported reader class")]
-    UnsupportedReaderError,
+    #[error("unsupported reader class, got: {0}, expected ReaderMem or ReaderMmap")]
+    UnsupportedReaderError(String),
 
     #[error("mmap is not supported for parallel processing")]
     ParallelMmapReaderError,
@@ -23,7 +23,7 @@ impl From<PandasMaxmindError> for PyErr {
 
         match e {
             MaxMindDBError(_) => PyRuntimeError::new_err(e.to_string()),
-            UnsupportedReaderError => PyTypeError::new_err(e.to_string()),
+            UnsupportedReaderError(_) => PyTypeError::new_err(e.to_string()),
             ParseColumnError(_) => PyKeyError::new_err(e.to_string()),
             ParallelMmapReaderError => PyRuntimeError::new_err(e.to_string()),
         }

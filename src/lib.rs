@@ -16,11 +16,15 @@ mod geo_column;
 mod geolocate;
 mod lookup_result;
 
+/*
+   Generic superclass, useful for Python code
+*/
 #[pyclass(subclass, name = "Reader")]
 struct PyReader;
 
-// DB is loaded into memory fully, this is container class
-// which is later used to create a context
+/*
+   Loads DB fully into memory
+*/
 #[pyclass(name = "ReaderMem", extends = PyReader)]
 struct PyReaderMem {
     reader: Reader<Vec<u8>>,
@@ -37,7 +41,9 @@ impl PyReaderMem {
     }
 }
 
-// Memory mapping version of reader
+/*
+   Uses memory mapping instead of loading whole thing into memory
+*/
 #[pyclass(name = "ReaderMmap", extends = PyReader)]
 struct PyReaderMmap {
     reader: Reader<Mmap>,
@@ -54,6 +60,10 @@ impl PyReaderMmap {
     }
 }
 
+/*
+   Converts Vec of lookup results into NDArray,
+   needs reallocation to spawn all the python objects
+*/
 fn result_into_py<'py, 'r>(
     py: Python<'py>,
     mut temp: HashMap<GeoColumn, Vec<LookupResult<'r>>>,
@@ -72,6 +82,9 @@ fn result_into_py<'py, 'r>(
     res
 }
 
+/*
+   Interface exposed to internal library Python code
+*/
 #[pyfunction]
 fn mmdb_geolocate<'py>(
     py: Python<'py>,
@@ -83,6 +96,7 @@ fn mmdb_geolocate<'py>(
 ) -> PyResult<HashMap<GeoColumn, &'py PyArray1<PyObject>>> {
     let ips: Vec<String> = ips.as_array().iter().map(|i| i.to_string()).collect();
 
+    // Has to do the match, since PyO3 doesn't allow generic functions
     match (
         reader.extract::<PyRef<PyReaderMem>>(py),
         reader.extract::<PyRef<PyReaderMmap>>(py),
@@ -108,7 +122,15 @@ fn mmdb_geolocate<'py>(
                 ))
             }
         }
-        (_, _) => Err(UnsupportedReaderError)?,
+        // Might as well be incorrect object being passed like None
+        (_, _) => Err(UnsupportedReaderError(
+            reader
+                .as_ref(py)
+                .get_type()
+                .name()
+                .unwrap_or("Unknown")
+                .to_string(),
+        ))?,
     }
 }
 
