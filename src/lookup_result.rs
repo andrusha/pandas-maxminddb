@@ -1,31 +1,31 @@
 use core::option::Option;
 use pyo3::{IntoPy, PyObject, Python, ToPyObject};
 
-pub enum LookupResult<'py> {
-    String(Option<&'py str>),
+pub enum LookupResult<'a> {
+    String(Option<&'a str>),
     Float(Option<f64>),
     Int(Option<u16>),
 }
 
-impl<'py> Into<LookupResult<'py>> for Option<&'py str> {
-    fn into(self) -> LookupResult<'py> {
-        LookupResult::String(self)
+impl<'a> From<Option<&'a str>> for LookupResult<'a> {
+    fn from(s: Option<&'a str>) -> Self {
+        LookupResult::String(s)
     }
 }
 
-impl<'py> Into<LookupResult<'py>> for Option<f64> {
-    fn into(self) -> LookupResult<'py> {
-        LookupResult::Float(self)
+impl<'a> From<Option<f64>> for LookupResult<'a> {
+    fn from(v: Option<f64>) -> Self {
+        LookupResult::Float(v)
     }
 }
 
-impl<'py> Into<LookupResult<'py>> for Option<u16> {
-    fn into(self) -> LookupResult<'py> {
-        LookupResult::Int(self)
+impl<'a> From<Option<u16>> for LookupResult<'a> {
+    fn from(v: Option<u16>) -> Self {
+        LookupResult::Int(v)
     }
 }
 
-impl<'py> ToPyObject for LookupResult<'py> {
+impl<'a> ToPyObject for LookupResult<'a> {
     fn to_object(&self, py: Python<'_>) -> PyObject {
         match self {
             LookupResult::String(s) => s.into_py(py),
