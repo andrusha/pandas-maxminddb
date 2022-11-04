@@ -6,8 +6,10 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
 
-// Treats missing lookup as non-critical error
-// in order to short-circuit execution down the line
+/*
+   Treats missing lookup as non-critical error
+   in order to short-circuit execution down the line
+*/
 fn lookup_ip<'py, T: AsRef<[u8]>>(
     ip: &str,
     reader: &'py Reader<T>,
@@ -54,6 +56,11 @@ mod test_lookup_ip {
     }
 }
 
+/*
+   Splits the slice into chunks, each then geolocated in parallel,
+   and result is unioned together.
+   Optimal chunk size depends on the dataset and the platform
+*/
 pub fn geolocate_par<'r>(
     ips: &[String],
     reader: &'r Reader<Vec<u8>>,
@@ -71,6 +78,7 @@ pub fn geolocate_par<'r>(
         res.insert(c, Vec::with_capacity(ips.len()));
     }
 
+    // Union chunks together
     for chunk in chunks {
         for (k, v) in chunk?.iter_mut() {
             res.get_mut(k).unwrap().append(v);
@@ -80,6 +88,9 @@ pub fn geolocate_par<'r>(
     Ok(res)
 }
 
+/*
+   Geolocates given slice with any reader
+*/
 pub fn geolocate<'r, T: AsRef<[u8]>>(
     ips: &[String],
     reader: &'r Reader<T>,
@@ -220,6 +231,7 @@ mod test_geolocate {
         .map(|i| i.to_string())
         .collect();
 
+        // Set chunks to 1 to actually trigger parallelism
         let res = geolocate_par(&ips, &reader, &[GeoColumn::City, GeoColumn::Latitude], 1);
         assert!(res.is_ok());
         let hm = res.unwrap();
