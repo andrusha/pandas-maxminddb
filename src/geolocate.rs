@@ -144,6 +144,7 @@ pub fn geolocate<'r, T: AsRef<[u8]>>(
 #[cfg(test)]
 mod test_geolocate {
     use super::geolocate;
+    use crate::geolocate::geolocate_par;
     use crate::{GeoColumn, LookupResult};
     use maxminddb::Reader;
 
@@ -152,11 +153,29 @@ mod test_geolocate {
         let reader = Reader::open_mmap("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
 
         let ips = Vec::new();
-        let res = geolocate(&ips, &reader, &vec![GeoColumn::City]);
+        let res = geolocate(&ips, &reader, &[GeoColumn::City]);
         assert!(res.is_ok());
         let hm = res.unwrap();
         assert!(hm.contains_key(&GeoColumn::City));
         assert!(hm[&GeoColumn::City].is_empty());
+    }
+
+    fn unwrap_strings<'a>(xs: &'a [LookupResult]) -> Vec<Option<&'a str>> {
+        xs.iter()
+            .map(|c| match c {
+                LookupResult::String(s) => *s,
+                _ => panic!(),
+            })
+            .collect()
+    }
+
+    fn unwrap_floats(xs: &[LookupResult]) -> Vec<Option<f64>> {
+        xs.iter()
+            .map(|c| match c {
+                LookupResult::Float(f) => *f,
+                _ => panic!(),
+            })
+            .collect()
     }
 
     #[test]
@@ -172,28 +191,48 @@ mod test_geolocate {
         .map(|i| i.to_string())
         .collect();
 
-        let res = geolocate(&ips, &reader, &vec![GeoColumn::City, GeoColumn::Latitude]);
+        let res = geolocate(&ips, &reader, &[GeoColumn::City, GeoColumn::Latitude]);
         assert!(res.is_ok());
         let hm = res.unwrap();
         assert!(hm.contains_key(&GeoColumn::City));
         assert!(hm.contains_key(&GeoColumn::Latitude));
 
-        let cities: Vec<Option<&str>> = hm[&GeoColumn::City]
-            .iter()
-            .map(|c| match c {
-                LookupResult::String(s) => *s,
-                _ => panic!(),
-            })
-            .collect();
-        assert_eq!(cities, vec![Some("Houston"), None, None, Some("Montreal"),]);
+        assert_eq!(
+            unwrap_strings(&hm[&GeoColumn::City]),
+            vec![Some("Houston"), None, None, Some("Montreal"),]
+        );
+        assert_eq!(
+            unwrap_floats(&hm[&GeoColumn::Latitude]),
+            vec![Some(29.9787), None, None, Some(45.5063)]
+        );
+    }
 
-        let latitudes: Vec<Option<f64>> = hm[&GeoColumn::Latitude]
-            .iter()
-            .map(|c| match c {
-                LookupResult::Float(f) => *f,
-                _ => panic!(),
-            })
-            .collect();
-        assert_eq!(latitudes, vec![Some(29.9787), None, None, Some(45.5063)]);
+    #[test]
+    fn geolocates_in_parallel() {
+        let reader = Reader::open_readfile("./GeoLite.mmdb/GeoLite2-City.mmdb").unwrap();
+        let ips: Vec<String> = vec![
+            "75.63.106.74",
+            "255.255.255.255",
+            "gibberish",
+            "132.206.246.203",
+        ]
+        .iter()
+        .map(|i| i.to_string())
+        .collect();
+
+        let res = geolocate_par(&ips, &reader, &[GeoColumn::City, GeoColumn::Latitude], 1);
+        assert!(res.is_ok());
+        let hm = res.unwrap();
+        assert!(hm.contains_key(&GeoColumn::City));
+        assert!(hm.contains_key(&GeoColumn::Latitude));
+
+        assert_eq!(
+            unwrap_strings(&hm[&GeoColumn::City]),
+            vec![Some("Houston"), None, None, Some("Montreal"),]
+        );
+        assert_eq!(
+            unwrap_floats(&hm[&GeoColumn::Latitude]),
+            vec![Some(29.9787), None, None, Some(45.5063)]
+        );
     }
 }
