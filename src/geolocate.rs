@@ -1,7 +1,6 @@
+use crate::lookup_result::LookupResult;
 use crate::{GeoColumn, PandasMaxmindError};
 use maxminddb::{geoip2, Reader};
-use numpy::PyReadonlyArray1;
-use pyo3::{PyObject, Python, ToPyObject};
 use std::collections::HashMap;
 use std::net::IpAddr;
 
@@ -53,19 +52,18 @@ mod test_lookup_ip {
     }
 }
 
-pub fn geolocate<'py, T: AsRef<[u8]>>(
-    py: Python<'py>,
-    ips: PyReadonlyArray1<PyObject>,
-    reader: &Reader<T>,
+pub fn geolocate<'py, 'r, T: AsRef<[u8]>>(
+    ips: &[String],
+    reader: &'r Reader<T>,
     columns: Vec<GeoColumn>,
-) -> Result<HashMap<GeoColumn, Vec<PyObject>>, PandasMaxmindError> {
+) -> Result<HashMap<GeoColumn, Vec<LookupResult<'r>>>, PandasMaxmindError> {
     let mut res = HashMap::with_capacity(columns.len());
     for &c in columns.iter() {
         res.insert(c, Vec::with_capacity(ips.len()));
     }
 
-    for ip in ips.as_array().iter() {
-        let lookup: Option<geoip2::City> = lookup_ip(&ip.to_string(), reader)?;
+    for ip in ips {
+        let lookup: Option<geoip2::City> = lookup_ip(ip, reader)?;
 
         for (col, vec) in res.iter_mut() {
             let v = match col {
@@ -73,45 +71,39 @@ pub fn geolocate<'py, T: AsRef<[u8]>>(
                     .as_ref()
                     .and_then(|l| l.country.as_ref())
                     .and_then(|c| c.iso_code)
-                    .to_object(py),
-
+                    .into(),
                 GeoColumn::State => lookup
                     .as_ref()
                     .and_then(|l| l.subdivisions.as_ref())
                     .and_then(|sd| sd.first())
                     .and_then(|s| s.iso_code)
-                    .to_object(py),
-
+                    .into(),
                 GeoColumn::City => lookup
                     .as_ref()
                     .and_then(|l| l.city.as_ref())
                     .and_then(|c| c.names.as_ref())
-                    .and_then(|n| n.get("en"))
-                    .to_object(py),
-
+                    .and_then(|n| n.get("en").copied())
+                    .into(),
                 GeoColumn::Postcode => lookup
                     .as_ref()
                     .and_then(|l| l.postal.as_ref())
                     .and_then(|c| c.code)
-                    .to_object(py),
-
+                    .into(),
                 GeoColumn::Longitude => lookup
                     .as_ref()
                     .and_then(|l| l.location.as_ref())
                     .and_then(|l| l.longitude)
-                    .to_object(py),
-
+                    .into(),
                 GeoColumn::Latitude => lookup
                     .as_ref()
                     .and_then(|l| l.location.as_ref())
                     .and_then(|l| l.latitude)
-                    .to_object(py),
-
+                    .into(),
                 GeoColumn::AccuracyRadius => lookup
                     .as_ref()
                     .and_then(|l| l.location.as_ref())
                     .and_then(|l| l.accuracy_radius)
-                    .to_object(py),
+                    .into(),
             };
 
             vec.push(v);
@@ -174,7 +166,7 @@ mod test_geolocate {
                     Some("Houston".to_string()),
                     None,
                     None,
-                    Some("Montreal".to_string())
+                    Some("Montreal".to_string()),
                 ]
             );
 
