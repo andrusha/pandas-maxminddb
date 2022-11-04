@@ -20,8 +20,7 @@ class GeoAccessor:
     def __init__(self, pandas_obj: pd.DataFrame):
         self._obj = pandas_obj
 
-    def geolocate(self, ip_column_name: str, reader: Reader, geo_columns: list = None,
-                  parallel=False) -> pd.DataFrame:
+    def geolocate(self, ip_column_name: str, reader: Reader, geo_columns: list = None, parallel=False) -> pd.DataFrame:
         """
         :return: appends geolocation information based on the given IP address column
         """
