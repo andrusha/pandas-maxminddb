@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "pandas-maxminddb"
-version = "0.2.0"
+version = "0.2.1"
 description = "Fast geolocation library for Pandas Dataframes, built on Numpy C-FFI"
 requires-python = ">=3.8"
 license = {text = "MIT"}
