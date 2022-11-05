@@ -4,7 +4,7 @@ import pandas as pd
 
 from .pandas_maxminddb import Reader, ReaderMem, ReaderMmap, mmdb_geolocate
 
-__all__ = ["open_database", "GeoAccessor", "ReaderMem", "ReaderMmap"]
+__all__ = ["open_database", "GeoAccessor", "Reader", "ReaderMem", "ReaderMmap"]
 
 
 @contextmanager
