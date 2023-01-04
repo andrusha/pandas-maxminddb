@@ -1,0 +1,12 @@
+[package]
+name = "struct_deep_getter"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+#struct_deep_getter_derive = { path = "../struct_deep_getter_derive", optional = true }
+
+[features]
+#derive = ["dep:struct_deep_getter_derive"]
