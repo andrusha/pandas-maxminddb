@@ -1,11 +1,13 @@
 extern crate proc_macro;
+extern crate core;
 
-use proc_macro::{Ident, Span, TokenStream};
+use proc_macro::TokenStream;
 use std::collections::{HashMap, VecDeque};
+use proc_macro2::Span;
 
 use quote::quote;
 use syn;
-use syn::{Fields, FieldsNamed, File, GenericArgument, ItemStruct, Lit, Meta, MetaList, NestedMeta, PathArguments, Type};
+use syn::{Ident, Fields, FieldsNamed, File, GenericArgument, ItemStruct, Lit, Meta, MetaList, NestedMeta, PathArguments, Type};
 use syn::visit::Visit;
 
 
@@ -61,11 +63,11 @@ fn get_meta(i: &ItemStruct) -> Option<MetaList> {
 #[derive(Debug)]
 struct Field {
     ident: String,
-    types: VecDeque<String>,
+    types: Vec<String>,
 }
 
-fn extract_types_deque(start_type: &Type) -> VecDeque<String> {
-    let mut res = VecDeque::new();
+fn extract_types_deque(start_type: &Type) -> Vec<String> {
+    let mut res = Vec::new();
     let mut rec_ty = VecDeque::new();
     rec_ty.push_front(start_type.clone());
 
@@ -73,7 +75,8 @@ fn extract_types_deque(start_type: &Type) -> VecDeque<String> {
         match ty {
             Type::Path(p) => {
                 for seg in p.path.segments {
-                    res.push_back(seg.ident.to_string());
+                    res.push(seg.ident.to_string());
+
                     if !seg.arguments.is_empty() {
                         match seg.arguments {
                             PathArguments::AngleBracketed(ab_arg) => {
@@ -81,6 +84,9 @@ fn extract_types_deque(start_type: &Type) -> VecDeque<String> {
                                     match arg {
                                         GenericArgument::Type(next_ty) => {
                                             rec_ty.push_back(next_ty.clone());
+                                        }
+                                        GenericArgument::Lifetime(_) => {
+                                            // ignore lifetimes
                                         }
                                         _ => panic!("only types as arguments are supported")
                                     }
@@ -90,6 +96,10 @@ fn extract_types_deque(start_type: &Type) -> VecDeque<String> {
                         }
                     }
                 }
+            }
+            Type::Reference(r) => {
+                // ignore refs push concrete types
+                rec_ty.push_back(r.elem.as_ref().clone());
             }
             _ => panic!("only type paths are supported")
         }
@@ -148,37 +158,147 @@ impl<'ast> Visit<'ast> for StructVisitor {
     }
 }
 
-fn generate_getters(target: String, structs: &HashMap<String, Struct>) -> Vec<String> {
-    let mut res = Vec::new();
-    let mut to_visit = VecDeque::new();
-    to_visit.push_back((target.clone(), structs.get(&target).unwrap()));
-
-    while let Some((prefix, strct)) = to_visit.pop_front() {
-        for field in strct.fields.iter() {
-            let ty = field.types.back().unwrap();
-            if structs.contains_key(ty) {
-                to_visit.push_front((format!("{}.{}", prefix, field.ident), structs.get(ty).unwrap()));
+fn fields_to_path(fields: &[&Field]) -> String {
+    fields
+        .iter()
+        .map(|field| {
+            if field.types.contains(&"Vec".to_owned()) {
+                format!("{}[0]", field.ident)
+            } else if field.types.contains(&"BTreeMap".to_owned()) {
+                format!("{}[\"en\"]", field.ident)
             } else {
-                res.push(format!("{}.{}", prefix, field.ident));
+                field.ident.to_string()
+            }
+        })
+        .collect::<Vec<String>>()
+        .join(".")
+}
+
+fn fields_to_getter(fields: &[&Field]) -> proc_macro2::TokenStream {
+    let mut within_option = false;
+    let size = fields.len();
+
+    let mut tokens: Vec<proc_macro2::TokenStream> = Vec::new();
+
+    for (i, field) in fields.iter().enumerate() {
+        let ident = Ident::new(&field.ident, Span::call_site());
+        let is_last = i == size - 1;
+
+        let str_types: Vec<&str> = field.types.iter().map(|s| s.as_str()).collect();
+        let res = match str_types.as_slice() {
+            ["Option", "Vec", _] => {
+                if !within_option {
+                    within_option = true;
+                    quote!(.#ident.as_ref().and_then(|x| x.first()))
+                } else {
+                    quote!(.and_then(|x| x.#ident.as_ref()).and_then(|x| x.first()))
+                }
+            },
+            ["Option", "BTreeMap", _, _] => {
+                if !within_option {
+                    within_option = true;
+                    quote!(.#ident.as_ref().and_then(|x| x.get("en").copied()))
+                } else {
+                    quote!(.and_then(|x| x.#ident.as_ref()).and_then(|x| x.get("en").copied()))
+                }
+            },
+            ["Option", _] => {
+                if !within_option {
+                    within_option = true;
+                    if is_last {
+                        quote!(.#ident)
+                    } else {
+                        quote!(.#ident.as_ref())
+                    }
+                } else {
+                    if is_last {
+                        quote!(.and_then(|x| x.#ident))
+                    } else {
+                        quote!(.and_then(|x| x.#ident.as_ref()))
+                    }
+                }
+            },
+            &[] | &[..] => todo!(),
+        };
+
+        tokens.push(res);
+    }
+    let tokens = proc_macro2::TokenStream::from_iter(tokens);
+
+    let path = fields_to_path(fields);
+    let res = quote!(
+      #path => self #tokens.into(),
+    );
+
+    proc_macro2::TokenStream::from(res)
+}
+
+struct GeneratorState<'a> {
+    current_struct: &'a Struct,
+    fields: Vec<&'a Field>
+}
+
+fn generate_getters(target: String, structs: &HashMap<String, Struct>) -> (Vec<String>, Vec<proc_macro2::TokenStream>) {
+    let mut paths = Vec::new();
+    let mut getters = Vec::new();
+
+    let mut to_visit = VecDeque::new();
+    to_visit.push_back(GeneratorState {
+        current_struct: structs.get(&target).unwrap(),
+        fields: Vec::new()
+    });
+
+    while let Some(state) = to_visit.pop_front() {
+        for field in state.current_struct.fields.iter() {
+            let ty = field.types.last().unwrap();
+            let mut fields = state.fields.clone();
+            fields.push(field);
+
+            if structs.contains_key(ty) {
+                to_visit.push_front(GeneratorState {
+                    current_struct: structs.get(ty).unwrap(),
+                    fields
+                });
+            } else {
+                paths.push(fields_to_path(&fields));
+                getters.push(fields_to_getter(&fields));
             }
         }
     }
 
-    res
+    (paths, getters)
 }
 
 fn generate_impl(target: String, structs: &HashMap<String, Struct>) -> TokenStream {
-    let trgt = syn::Ident::new(&target, proc_macro2::Span::mixed_site());
-    let paths = generate_getters(target, structs);
+    let target_struct = structs.get(&target).unwrap();
+
+    let trgt = if let Some(rpl) = &target_struct.replacement_type {
+        Ident::new(rpl, Span::mixed_site())
+    } else {
+        Ident::new(&target_struct.ident, Span::mixed_site())
+    };
+
+    let res_type = Ident::new(&target_struct.return_type.as_ref().unwrap(), Span::mixed_site());
+
+    let (paths, getters) = generate_getters(target, structs);
+    let getters = proc_macro2::TokenStream::from_iter(getters);
     let res = quote!(
-        impl StructDeepGetter for #trgt {
+        impl<'a> struct_deep_getter::StructDeepGetter<#res_type> for #trgt<'a> {
             fn deeper_structs() -> Vec<String> {
                 let mut res = Vec::new();
                 #(res.push(#paths.to_string());)*
                 res
             }
+
+            fn get_path(&self, path: &str) -> #res_type {
+                match path {
+                    #getters
+                    _ => panic!("error"),
+                }
+            }
         }
     );
+    println!("{}", res);
     TokenStream::from(res)
 }
 
@@ -190,6 +310,7 @@ pub fn make_paths(input: TokenStream) -> TokenStream {
 
     let mut impls = Vec::new();
     for (ident, strct) in state.structs.iter() {
+        println!("{:?}", strct);
         if strct.generate {
             impls.push(generate_impl(ident.clone(), &state.structs));
         }
