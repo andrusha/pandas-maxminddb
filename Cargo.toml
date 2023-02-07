@@ -14,6 +14,7 @@ numpy = "0.17.2"
 maxminddb = { version = "0.23.0", features = ["mmap"] }
 thiserror = "1.0.36"
 rayon = "1.5.3"
+struct_deep_getter_derive = { path = "struct_deep_getter_derive" }
 
 [build-dependencies]
 pyo3-build-config = "0.17.1"
